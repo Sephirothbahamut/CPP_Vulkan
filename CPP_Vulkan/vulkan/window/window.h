@@ -6,7 +6,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "../core/manager.h"
-#include "unique_surface.h"
+#include "surface.h"
 #include "swapchain.h"
 
 namespace utils::graphics::vulkan::window
@@ -21,7 +21,7 @@ namespace utils::graphics::vulkan::window
 
 		private:
 			utils::observer_ptr<const core::manager> manager_ptr;
-			unique_surface surface;
+			surface surface;
 			swapchain swapchain;
 		};
 	}

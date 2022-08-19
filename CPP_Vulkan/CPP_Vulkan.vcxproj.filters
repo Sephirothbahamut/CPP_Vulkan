@@ -51,7 +51,7 @@
     <ClCompile Include="vulkan\core\queues.cpp">
       <Filter>Source Files\vulkan\core</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\window\unique_surface.cpp">
+    <ClCompile Include="vulkan\window\surface.cpp">
       <Filter>Source Files\vulkan\window</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\window\window.cpp">
@@ -83,7 +83,7 @@
     <ClInclude Include="vulkan\core\queues.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\window\unique_surface.h">
+    <ClInclude Include="vulkan\window\surface.h">
       <Filter>Header Files\vulkan\window</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\window\window.h">

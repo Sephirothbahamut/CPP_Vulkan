@@ -98,6 +98,7 @@ namespace utils::graphics::vulkan::core
 
 		class queue_indices
 			{
+			friend physical_device::physical_device(const vk::Instance& instance, swapchain_chosen_details& swapchain_chosen_details);
 			public:
 				queue_indices(vk::PhysicalDevice device, const proxy_surface& proxy_surface)
 					{
@@ -200,23 +201,16 @@ namespace utils::graphics::vulkan::core
 				}
 
 			this->vk::PhysicalDevice::operator=(chosen);
-			auto chosen_queue_families = chosen.getQueueFamilyProperties();
-			int i = 0;
-			for (const auto& queue_family : chosen_queue_families)
-				{
-				if (queue_family.queueCount > 0)
-					{
-					if (queue_family.queueFlags & vk::QueueFlagBits::eGraphics) { graphics_family_index = i; }
-					if (chosen.getSurfaceSupportKHR(i, proxy_surface.get()))    { present_family_index = i; }
-					}
-				i++;
-				}
+
+			details::queue_indices  selected_indices{chosen, proxy_surface};
+			graphics_family_index = selected_indices.graphics_family.value();
+			present_family_index  = selected_indices.present_family .value();
 
 			swapchain_chosen_details =
 				{
-					 chosen.getSurfaceCapabilitiesKHR(proxy_surface.get()),
-					 chosen.getSurfaceFormatsKHR(proxy_surface.get()),
-					 chosen.getSurfacePresentModesKHR(proxy_surface.get())
+				chosen.getSurfaceCapabilitiesKHR(proxy_surface.get()),
+				chosen.getSurfaceFormatsKHR     (proxy_surface.get()),
+				chosen.getSurfacePresentModesKHR(proxy_surface.get())
 				};
 
 			using namespace std::string_literals;

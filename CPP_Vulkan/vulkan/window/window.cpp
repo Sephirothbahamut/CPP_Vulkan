@@ -17,6 +17,9 @@ namespace utils::graphics::vulkan::window
 				{
 				std::cout << "recreate swapchain\n";
 				std::cout << width << ", " << height << "\n";
+
+				surface = {core::manager::getter_window{*manager_ptr}.instance(), get_handle()};
+				swapchain = {*manager_ptr, surface.get(), size};
 				}
 			}
 		return std::nullopt;
