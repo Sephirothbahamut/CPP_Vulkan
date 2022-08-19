@@ -142,15 +142,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="vulkan\core\debug_messenger.cpp" />
+    <ClCompile Include="vulkan\core\instance.cpp" />
+    <ClCompile Include="vulkan\core\manager.cpp" />
+    <ClCompile Include="vulkan\core\device.cpp" />
+    <ClCompile Include="vulkan\core\queues.cpp" />
+    <ClCompile Include="vulkan\core\swapchain_chosen_details.cpp" />
+    <ClCompile Include="vulkan\window\swapchain.cpp" />
+    <ClCompile Include="vulkan\window\unique_surface.cpp" />
+    <ClCompile Include="vulkan\window\window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vulkan\core\debug_messenger.h" />
-    <ClInclude Include="vulkan\core\device.h" />
     <ClInclude Include="vulkan\core\instance.h" />
     <ClInclude Include="vulkan\core\manager.h" />
-    <ClInclude Include="vulkan\core\physical_device.h" />
+    <ClInclude Include="vulkan\core\device.h" />
+    <ClInclude Include="vulkan\core\queues.h" />
+    <ClInclude Include="vulkan\core\swapchain_chosen_details.h" />
     <ClInclude Include="vulkan\core\utils.h" />
+    <ClInclude Include="vulkan\window\swapchain.h" />
+    <ClInclude Include="vulkan\window\unique_surface.h" />
+    <ClInclude Include="vulkan\window\window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

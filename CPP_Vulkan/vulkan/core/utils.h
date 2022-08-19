@@ -1,13 +1,19 @@
 #pragma once
 
-#include <optional>
-#include <stdexcept>
+#include <utils/logger.h>
+#include <utils/compilation/debug.h>
+
 #include <vulkan/vulkan.hpp>
 
-namespace utils::graphics::vulkan::details
+#include <optional>
+#include <stdexcept>
+
+namespace utils::graphics::vulkan::core::details
 	{
-	// TODO add concept to F for the signature: bool (const required_t&, const available_t&)
-	template <typename required_t, typename available_t, typename F>
+	template <typename F, typename required_t, typename available_t>
+	concept comparator = requires (F f, const required_t& rt, const available_t& at) { f(rt, at); };
+
+	template <typename required_t, typename available_t, comparator<required_t, available_t> F>
 	inline static std::vector<required_t> check_required_in_available(const std::vector<required_t>& required_vec, const std::vector<available_t>& available_vec, F lambda)
 		{
 		std::vector<required_t> ret;
@@ -37,9 +43,25 @@ namespace utils::graphics::vulkan::details
 			}
 		return std::nullopt;
 		}
+
+	struct validation_layers
+		{
+		inline static constexpr bool enabled{ utils::compilation::debug };
+		inline static const std::vector<const char*> list
+			{
+				"VK_LAYER_KHRONOS_validation"
+			};
+
+		[[nodiscard]] static std::vector<const char*> check_missing()
+			{
+			if (!enabled) { return {}; }
+			static auto available{ vk::enumerateInstanceLayerProperties() };
+			return check_required_in_available(list, available, [](const auto& required, const auto& available) { return strcmp(required, available.layerName) == 0; });
+			}
+		};
 	}
 
-namespace utils::graphics::vulkan
+namespace utils::graphics::vulkan::core
 	{
 	struct error : std::runtime_error { using std::runtime_error::runtime_error; };
 

@@ -19,20 +19,56 @@
     <Filter Include="Header Files\vulkan\core">
       <UniqueIdentifier>{7187aab7-884e-49b7-bad4-f914b2152909}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\vulkan">
+      <UniqueIdentifier>{b25478fa-2f58-4653-a1bf-9ada53d9c534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vulkan\core">
+      <UniqueIdentifier>{0b2c063f-60e3-456d-9abf-013011ff6df9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\vulkan\window">
+      <UniqueIdentifier>{616192f7-ab9e-494f-a98a-3c4bc61b0fc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vulkan\window">
+      <UniqueIdentifier>{27849c80-69a8-4229-9ac6-d01707a7787c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\debug_messenger.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\instance.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\manager.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\device.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\queues.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\window\unique_surface.cpp">
+      <Filter>Source Files\vulkan\window</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\window\window.cpp">
+      <Filter>Source Files\vulkan\window</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\window\swapchain.cpp">
+      <Filter>Source Files\vulkan\window</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\swapchain_chosen_details.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vulkan\core\device.h">
-      <Filter>Header Files\vulkan\core</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\core\instance.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\core\physical_device.h">
+    <ClInclude Include="vulkan\core\device.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\core\utils.h">
@@ -42,6 +78,21 @@
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\core\manager.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\core\queues.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\window\unique_surface.h">
+      <Filter>Header Files\vulkan\window</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\window\window.h">
+      <Filter>Header Files\vulkan\window</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\window\swapchain.h">
+      <Filter>Header Files\vulkan\window</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\core\swapchain_chosen_details.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
   </ItemGroup>
