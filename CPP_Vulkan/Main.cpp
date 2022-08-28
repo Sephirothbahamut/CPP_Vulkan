@@ -1,5 +1,6 @@
 #include "vulkan/core/manager.h"
 #include "vulkan/window/window.h"
+#include "vulkan/window/window_sized_image.h"
 
 class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>
 	{
@@ -22,6 +23,17 @@ int main()
 			},
 		manager
 		};
+	auto image = window.images.emplace
+		({
+		.imageType = vk::ImageType::e2D,
+		.format = vk::Format::eA1R5G5B5UnormPack16,
+		.mipLevels = 1,
+		.arrayLayers = 1,
+		.samples = vk::SampleCountFlagBits::e1,
+		.tiling = vk::ImageTiling::eOptimal,
+		.usage{vk::ImageUsageFlagBits::eInputAttachment},
+		.initialLayout = vk::ImageLayout::eUndefined,
+		});
 
 	while (window.is_open())
 		{

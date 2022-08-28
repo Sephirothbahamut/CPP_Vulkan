@@ -3,7 +3,7 @@
 #include <utils/logger.h>
 #include <utils/compilation/debug.h>
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 #include <optional>
 #include <stdexcept>

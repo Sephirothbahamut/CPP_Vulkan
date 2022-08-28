@@ -3,7 +3,7 @@
 #include <utils/memory.h>
 
 #include <Windows.h>
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 namespace utils::graphics::vulkan::window
 	{

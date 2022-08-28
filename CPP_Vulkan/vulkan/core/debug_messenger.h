@@ -2,7 +2,7 @@
 
 #include <utils/memory.h>
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 #include "instance.h"
 
@@ -15,7 +15,7 @@ namespace utils::graphics::vulkan::core
 
 			~debug_messenger();
 
-			inline static vk::DebugUtilsMessengerCreateInfoEXT create_info();
+			static vk::DebugUtilsMessengerCreateInfoEXT create_info();
 
 		private:
 			vk::DebugUtilsMessengerEXT messenger;

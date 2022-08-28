@@ -34,7 +34,7 @@ namespace utils::graphics::vulkan::core
 	instance::instance(const char* application_name, vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_cinfo) : vk::UniqueInstance{ create(application_name, debug_utils_messenger_cinfo) }{}
 
 		
-	vk::UniqueInstance instance::create(const char* application_name, vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_cinfo) noexcept
+	vk::UniqueInstance instance::create(const char* application_name, vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_cinfo)
 		{
 		auto missing_validation_layers  {details::validation_layers  ::check_missing()};
 		auto missing_instance_extensions{details::instance_extensions::check_missing()};

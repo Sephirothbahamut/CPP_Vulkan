@@ -114,6 +114,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/DVULKAN_HPP_NO_STRUCT_CONSTRUCTORS %(AdditionalOptions)</AdditionalOptions>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,6 +153,7 @@
     <ClCompile Include="vulkan\window\swapchain.cpp" />
     <ClCompile Include="vulkan\window\surface.cpp" />
     <ClCompile Include="vulkan\window\window.cpp" />
+    <ClCompile Include="vulkan\window\window_sized_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vulkan\core\debug_messenger.h" />
@@ -161,9 +163,11 @@
     <ClInclude Include="vulkan\core\queues.h" />
     <ClInclude Include="vulkan\core\swapchain_chosen_details.h" />
     <ClInclude Include="vulkan\core\utils.h" />
+    <ClInclude Include="vulkan\dependencies.h" />
     <ClInclude Include="vulkan\window\swapchain.h" />
     <ClInclude Include="vulkan\window\surface.h" />
     <ClInclude Include="vulkan\window\window.h" />
+    <ClInclude Include="vulkan\window\window_sized_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

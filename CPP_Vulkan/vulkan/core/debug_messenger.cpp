@@ -29,7 +29,7 @@ namespace utils::graphics::vulkan::core
 			};
 		}
 
-	VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+	VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger::debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT , const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* )
 		{
 		auto severity = vk::DebugUtilsMessageSeverityFlagBitsEXT(messageSeverity);
 		switch (severity)

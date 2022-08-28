@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 #include <vector>
 

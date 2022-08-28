@@ -3,7 +3,7 @@
 #include <utils/memory.h>
 #include <utils/math/vec2.h>
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 #include "../core/manager.h"
 

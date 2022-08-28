@@ -5,11 +5,17 @@ namespace utils::graphics::vulkan::window
 	
 	window::window(const core::manager& manager) :
 		manager_ptr{ &manager },
-		surface{ core::manager::getter_window{manager}.instance(), get_handle()},
-		swapchain{ manager, surface.get(), size}
+		surface{ manager.getter(this).instance(), get_handle() },
+		swapchain{ manager, surface.get(), size },
+		images{ manager, {width, height, 1} }
 		{}
+	
+	vk::Extent3D window::get_extent() const noexcept
+	{
+	return { width, height, 1 };
+	}
 
-	std::optional<LRESULT> window::procedure(UINT msg, WPARAM wparam, LPARAM lparam)
+	std::optional<LRESULT> window::procedure(UINT msg, WPARAM , LPARAM )
 		{
 		switch (msg)
 			{
@@ -20,6 +26,8 @@ namespace utils::graphics::vulkan::window
 				
 				vulkan::window::swapchain new_swapchain { *manager_ptr, surface.get(), size, swapchain.get() };
 				swapchain = std::move(new_swapchain);
+
+				images.update_images({width, height, 1});
 				}
 			}
 		return std::nullopt;

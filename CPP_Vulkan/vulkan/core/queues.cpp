@@ -1,6 +1,6 @@
 #include "queues.h"
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 namespace utils::graphics::vulkan::core
 	{

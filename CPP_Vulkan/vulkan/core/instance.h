@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 namespace utils::graphics::vulkan::core
 	{
@@ -10,6 +10,6 @@ namespace utils::graphics::vulkan::core
 			instance(const char* application_name, vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_cinfo);
 
 		private:
-			static vk::UniqueInstance create(const char* application_name, vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_cinfo) noexcept;
+			static vk::UniqueInstance create(const char* application_name, vk::DebugUtilsMessengerCreateInfoEXT debug_utils_messenger_cinfo);
 		};
 	}

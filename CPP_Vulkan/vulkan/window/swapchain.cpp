@@ -24,9 +24,8 @@ namespace utils::graphics::vulkan::window
 
 		vk::UniqueSwapchainKHR swapchain::create(const core::manager& manager, const vk::SurfaceKHR& surface, utils::math::vec2u window_size, vk::SwapchainKHR old_swapchain)
 			{
-			core::manager::getter_swapchain manager_getter{ manager };
-			auto capabilities{ manager_getter.physical_device().getSurfaceCapabilitiesKHR(surface) };
-			auto swapchain_chosen_details{ manager_getter.swapchain_chosen_details() };
+			auto capabilities{ manager.getter(this).physical_device().getSurfaceCapabilitiesKHR(surface)};
+			auto swapchain_chosen_details{ manager.getter(this).swapchain_chosen_details() };
 
 			vk::SwapchainCreateInfoKHR info
 				{
@@ -51,7 +50,7 @@ namespace utils::graphics::vulkan::window
 
 			if (true)
 				{
-				auto queues{ manager_getter.queues() };
+				auto queues{ manager.getter(this).queues() };
 				std::array<uint32_t, 2> indices{ queues.get_graphics().index, queues.get_present().index};
 				if (queues.get_graphics().index == queues.get_present().index)
 					{
@@ -67,6 +66,6 @@ namespace utils::graphics::vulkan::window
 					}
 				}
 
-			return manager_getter.device().createSwapchainKHRUnique(info);
+			return manager.getter(this).device().createSwapchainKHRUnique(info);
 			}
 	}

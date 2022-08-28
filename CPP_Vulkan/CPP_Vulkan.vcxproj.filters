@@ -63,6 +63,9 @@
     <ClCompile Include="vulkan\core\swapchain_chosen_details.cpp">
       <Filter>Source Files\vulkan\core</Filter>
     </ClCompile>
+    <ClCompile Include="vulkan\window\window_sized_image.cpp">
+      <Filter>Source Files\vulkan\window</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vulkan\core\instance.h">
@@ -94,6 +97,12 @@
     </ClInclude>
     <ClInclude Include="vulkan\core\swapchain_chosen_details.h">
       <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\dependencies.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\window\window_sized_image.h">
+      <Filter>Header Files\vulkan\window</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

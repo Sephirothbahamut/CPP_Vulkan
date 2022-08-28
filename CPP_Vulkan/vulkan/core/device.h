@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 #include "instance.h"
 #include "swapchain_chosen_details.h"

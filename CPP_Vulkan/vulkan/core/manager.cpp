@@ -15,6 +15,7 @@ namespace utils::graphics::vulkan::core
 			
 		manager::getter_window::getter_window(const manager& manager) : manager_ptr{ &manager } {}
 		manager::getter_swapchain::getter_swapchain(const manager& manager) : manager_ptr{ &manager } {}
+		manager::getter_window_sized_images::getter_window_sized_images(const manager& manager) : manager_ptr{ &manager } {}
 
 		const vk::Instance& manager::getter_window::instance() const noexcept
 			{
@@ -39,5 +40,10 @@ namespace utils::graphics::vulkan::core
 		const queues& manager::getter_swapchain::queues() const noexcept
 			{
 			return manager_ptr->queues;
+			}
+
+		const vk::Device& manager::getter_window_sized_images::device() const noexcept
+			{
+			return manager_ptr->device.get();
 			}
 	}
