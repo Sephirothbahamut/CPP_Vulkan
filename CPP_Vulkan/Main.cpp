@@ -1,4 +1,5 @@
 #include "vulkan/core/manager.h"
+#include "vulkan/core/shader.h"
 #include "vulkan/window/window.h"
 #include "vulkan/window/window_sized_image.h"
 
@@ -26,7 +27,7 @@ int main()
 	auto image = window.images.emplace
 		({
 		.imageType = vk::ImageType::e2D,
-		.format = vk::Format::eA1R5G5B5UnormPack16,
+		.format = vk::Format::eA8B8G8R8UnormPack32,
 		.mipLevels = 1,
 		.arrayLayers = 1,
 		.samples = vk::SampleCountFlagBits::e1,
