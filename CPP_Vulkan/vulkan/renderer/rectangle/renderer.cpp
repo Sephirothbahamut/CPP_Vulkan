@@ -292,7 +292,9 @@ namespace utils::graphics::vulkan::renderer
 		catch (vk::SystemError err) {
 			throw std::runtime_error("failed to begin recording command buffer!");
 			}
-		vk::ClearValue clearColor{ std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 1.0f } };
+
+		//TODO get transparency color from window
+		vk::ClearValue clearColor{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } };
 
 		vk::RenderPassBeginInfo renderPassInfo
 			{

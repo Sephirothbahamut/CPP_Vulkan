@@ -22,7 +22,6 @@ namespace utils::graphics::vulkan::core
 		{
 		public:
 			manager();
-			~manager();
 
 		private:
 			instance instance;
@@ -45,6 +44,7 @@ namespace utils::graphics::vulkan::core
 				getter_window(const manager& manager);
 
 				const vk::Instance& instance() const noexcept;
+				const vk::Device& device() const noexcept;
 
 				utils::observer_ptr<const manager> manager_ptr;
 				};

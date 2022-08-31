@@ -5,7 +5,8 @@
 #include "vulkan/window/window_sized_image.h"
 #include "vulkan/renderer/rectangle/renderer.h"
 
-class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>
+#include <utils_win32/transparent.h>
+class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
 	{
 	utils_devirtualize
 	public:
@@ -28,16 +29,16 @@ int main()
 				},
 			manager
 			};
-		auto image = window.images.emplace
-		({
-		.imageType = vk::ImageType::e2D,
-		.format = vk::Format::eA8B8G8R8UnormPack32,
-		.mipLevels = 1,
-		.arrayLayers = 1,
-		.samples = vk::SampleCountFlagBits::e1,
-		.tiling = vk::ImageTiling::eOptimal,
-		.usage{vk::ImageUsageFlagBits::eInputAttachment},
-		.initialLayout = vk::ImageLayout::eUndefined,
+		auto image = window.images.emplace(
+			{
+			.imageType = vk::ImageType::e2D,
+			.format = vk::Format::eA8B8G8R8UnormPack32,
+			.mipLevels = 1,
+			.arrayLayers = 1,
+			.samples = vk::SampleCountFlagBits::e1,
+			.tiling = vk::ImageTiling::eOptimal,
+			.usage{vk::ImageUsageFlagBits::eInputAttachment},
+			.initialLayout = vk::ImageLayout::eUndefined,
 			});
 
 		ugv::renderer::rectangle_renderer rect_renderer{ manager, window };
@@ -46,8 +47,8 @@ int main()
 			{
 			while (window.poll_event())
 				{
-				rect_renderer.draw(manager, window);
 				}
+			rect_renderer.draw(manager, window);
 			}
 		}
 		catch (const std::exception& e)

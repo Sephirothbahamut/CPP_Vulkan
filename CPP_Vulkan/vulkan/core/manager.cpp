@@ -14,17 +14,17 @@ namespace utils::graphics::vulkan::core
 			flying_frames_pool { device.get(), queues }
 			{}
 
-		manager::~manager()
-			{
-			device.get().waitIdle();
-			}
-
 		// getter_window
 		manager::getter_window::getter_window(const manager& manager) : manager_ptr{ &manager } {}
 
 		const vk::Instance& manager::getter_window::instance() const noexcept
 			{
 			return manager_ptr->instance.get();
+			}
+
+		const vk::Device& manager::getter_window::device() const noexcept
+			{
+			return manager_ptr->device.get();
 			}
 
 		// getter_swapchain

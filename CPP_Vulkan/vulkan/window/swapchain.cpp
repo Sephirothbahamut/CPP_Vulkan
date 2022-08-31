@@ -64,7 +64,23 @@ namespace utils::graphics::vulkan::window
 	vk::UniqueSwapchainKHR swapchain::create_swapchain(const core::manager& manager, const vk::SurfaceKHR& surface, utils::math::vec2u window_size, vk::SwapchainKHR old_swapchain)
 		{
 		auto capabilities{ manager.getter(this).physical_device().getSurfaceCapabilitiesKHR(surface) };
+		
 		auto swapchain_chosen_details{ manager.getter(this).swapchain_chosen_details() };
+
+		//TODO qui si fa la finestra trasparente :)
+		auto composite_alpha{vk::CompositeAlphaFlagBitsKHR::eOpaque};
+		if (capabilities.supportedCompositeAlpha & vk::CompositeAlphaFlagBitsKHR::ePostMultiplied)
+			{
+			composite_alpha = vk::CompositeAlphaFlagBitsKHR::ePostMultiplied;
+			}
+		else if (capabilities.supportedCompositeAlpha & vk::CompositeAlphaFlagBitsKHR::ePreMultiplied)
+			{
+			composite_alpha = vk::CompositeAlphaFlagBitsKHR::ePreMultiplied;
+			}
+		else if (capabilities.supportedCompositeAlpha & vk::CompositeAlphaFlagBitsKHR::eInherit)
+			{
+			composite_alpha = vk::CompositeAlphaFlagBitsKHR::eInherit;
+			}
 
 		vk::SwapchainCreateInfoKHR info
 			{
@@ -79,7 +95,7 @@ namespace utils::graphics::vulkan::window
 
 			.preTransform = capabilities.currentTransform,
 
-			.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque, //TODO qui si fa la finestra trasparente :)
+			.compositeAlpha = composite_alpha,
 
 			.presentMode = swapchain_chosen_details.get_present_mode(),
 			.clipped = VK_TRUE,

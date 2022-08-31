@@ -16,9 +16,11 @@ namespace utils::graphics::vulkan::window
 	class window : public virtual utils::win32::window::base
 		{
 		public:
-			window_sized_images images;
-
 			window(const core::manager& manager);
+			~window() 
+				{
+				manager_ptr->getter(this).device().waitIdle();
+				}
 
 			std::optional<LRESULT> procedure(UINT msg, WPARAM wparam, LPARAM lparam);
 
@@ -27,6 +29,8 @@ namespace utils::graphics::vulkan::window
 			const swapchain& get_swapchain() const noexcept;
 
 			__declspec(property(get = get_extent)) vk::Extent3D extent;
+
+			window_sized_images images;
 
 		private:
 			utils::observer_ptr<const core::manager> manager_ptr;
