@@ -1,19 +1,29 @@
 #include "renderer.h"
 
 #include <array>
+#include <utils/compilation/debug.h>
 
 namespace utils::graphics::vulkan::renderer
 	{
-	rectangle_renderer::rectangle_renderer(const core::manager& manager, const window::window& window) :
+	rectangle_renderer::rectangle_renderer(const core::manager& manager) :
 		vertex_shader{ core::shader_vertex::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shader.vert") },
 		fragment_shader{ core::shader_fragment::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shader.frag") },
 		vk_renderpass{ create_renderpass(manager) },
-		vk_pipeline{ create_pipeline(manager, window, vk_renderpass.get(), vertex_shader, fragment_shader) },
-		vk_framebuffers{ create_framebuffers(manager, window) }
+		vk_pipeline{ create_pipeline(manager, vk_renderpass.get(), vertex_shader, fragment_shader) }
 		{}
+
+	void rectangle_renderer::resize(const core::manager& manager, const window::window& window)
+		{
+		vk_framebuffers = create_framebuffers(manager, window);
+		}
 
 	void rectangle_renderer::draw(core::manager& manager, const window::window& window)
 		{
+		if constexpr (utils::compilation::debug)
+			{
+			if (vk_framebuffers.empty()) { throw std::runtime_error{"You forgot to call resize on the current window."}; }
+			}
+
 		auto current_flying_frame { manager.getter(this).flying_frames_pool().get() };
 		auto& device              { manager.getter(this).device() };
 		auto& swapchain           { window.get_swapchain() };
@@ -110,7 +120,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	vk::UniquePipeline rectangle_renderer::create_pipeline(const core::manager& manager, const window::window& window, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
+	vk::UniquePipeline rectangle_renderer::create_pipeline(const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
 		{
 		std::vector<vk::DynamicState> dynamic_states;
 
@@ -118,13 +128,15 @@ namespace utils::graphics::vulkan::renderer
 
 		vk::PipelineViewportStateCreateInfo viewport_state;
 
+		//Specific window size not needed since we're using a dynamic state that is set with the command buffer.
 		dynamic_states.push_back(vk::DynamicState::eViewport);
-		std::vector<vk::Viewport> viewports{ vk::Viewport{.x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f} } };
+		std::vector<vk::Viewport> viewports{vk::Viewport{.x{0}, .y{0}, .width{0.f}, .height{0.f}, .minDepth{0.f}, .maxDepth{1.f} }};
 		viewport_state.viewportCount = viewports.size();
 		viewport_state.pViewports = viewports.data();
 
+		//Specific window size not needed since we're using a dynamic state that is set with the command buffer.
 		dynamic_states.push_back(vk::DynamicState::eScissor);
-		std::vector<vk::Rect2D> scissors{ vk::Rect2D{.offset{0, 0}, .extent{window.width, window.height}} };
+		std::vector<vk::Rect2D> scissors{vk::Rect2D{.offset{0, 0}, .extent{0, 0}}};
 		viewport_state.scissorCount = scissors.size();
 		viewport_state.pScissors = scissors.data();
 

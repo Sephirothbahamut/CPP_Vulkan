@@ -165,6 +165,7 @@
     <ClInclude Include="vulkan\core\manager.h" />
     <ClInclude Include="vulkan\core\device.h" />
     <ClInclude Include="vulkan\core\queues.h" />
+    <ClInclude Include="vulkan\core\renderer.h" />
     <ClInclude Include="vulkan\core\shader.h" />
     <ClInclude Include="vulkan\core\swapchain_chosen_details.h" />
     <ClInclude Include="vulkan\core\utils.h" />

@@ -2,9 +2,9 @@
 
 namespace utils::graphics::vulkan::window
 	{
-	
-	window::window(const core::manager& manager) :
-		manager_ptr{ &manager },
+	window::window(core::manager& manager, std::vector<utils::observer_ptr<core::renderer>>& renderer_ptrs) :
+		manager_ptr{&manager},
+		renderer_ptrs{renderer_ptrs},
 		surface    { manager.getter(this).instance(), get_handle() },
 		swapchain  { manager, surface.get(), size },
 		images     { manager, {width, height, 1} }
@@ -33,6 +33,14 @@ namespace utils::graphics::vulkan::window
 				swapchain = std::move(new_swapchain);
 
 				images.update_images({width, height, 1});
+
+				for (auto renderer_ptr : renderer_ptrs)
+					{
+					auto& renderer{*renderer_ptr};
+					renderer.resize(*manager_ptr, *this);
+
+					renderer.draw(*manager_ptr, *this);
+					}
 				}
 			}
 		return std::nullopt;

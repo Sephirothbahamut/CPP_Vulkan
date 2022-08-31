@@ -7,16 +7,18 @@
 #include "../dependencies.h"
 
 #include "../core/manager.h"
+#include "../core/renderer.h"
 #include "surface.h"
 #include "swapchain.h"
 #include "window_sized_image.h"
 
+namespace utils::graphics::vulkan::core { class renderer; }
 namespace utils::graphics::vulkan::window
 	{
 	class window : public virtual utils::win32::window::base
 		{
 		public:
-			window(const core::manager& manager);
+			window(core::manager& manager, std::vector<utils::observer_ptr<core::renderer>>& renderer_ptrs);
 
 			std::optional<LRESULT> procedure(UINT msg, WPARAM wparam, LPARAM lparam);
 
@@ -29,8 +31,9 @@ namespace utils::graphics::vulkan::window
 			window_sized_images images;
 
 		private:
-			utils::observer_ptr<const core::manager> manager_ptr;
+			utils::observer_ptr<core::manager> manager_ptr;
 			surface surface;
 			swapchain swapchain;
+			std::vector<utils::observer_ptr<core::renderer>> renderer_ptrs;
 		};
 	}

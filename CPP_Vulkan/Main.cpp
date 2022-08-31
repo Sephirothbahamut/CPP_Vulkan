@@ -3,6 +3,7 @@
 #include "vulkan/core/shader.h"
 #include "vulkan/window/window.h"
 #include "vulkan/window/window_sized_image.h"
+#include "vulkan/core/renderer.h"
 #include "vulkan/renderer/rectangle/renderer.h"
 #include "vulkan/renderer/rectanglz/renderer.h"
 
@@ -12,7 +13,8 @@ class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::wi
 	utils_devirtualize
 	public:
 		//using t<window_implementation_ts...>::t;
-		vulkan_window(base::create_info c_info, const utils::graphics::vulkan::core::manager& manager) : base{ c_info }, utils::graphics::vulkan::window::window{ manager } {}
+		vulkan_window(base::create_info c_info, utils::graphics::vulkan::core::manager& manager, std::vector<utils::observer_ptr< utils::graphics::vulkan::core::renderer>>& renderer_ptrs) :
+			base{ c_info }, utils::graphics::vulkan::window::window{ manager, renderer_ptrs } {}
 	};
 
 int main()
@@ -22,13 +24,21 @@ int main()
 		{
 		ugv::core::manager manager;
 
+		ugv::renderer::rectangle_renderer rect_renderer{manager};
+		//ugv::renderer::rectanglz_renderer recz_renderer{manager, window};
+
+		std::vector<utils::observer_ptr<ugv::core::renderer>> renderer_ptrs{&rect_renderer};
+
+
 		vulkan_window::initializer i;
 		vulkan_window window
-			{ vulkan_window::create_info
+			{
+			vulkan_window::create_info
 				{
 				.title{L"Sample Window Class"},
 				},
-			manager
+			manager,
+			renderer_ptrs
 			};
 		auto image = window.images.emplace(
 			{
@@ -42,12 +52,10 @@ int main()
 			.initialLayout = vk::ImageLayout::eUndefined,
 			});
 
-		ugv::renderer::rectangle_renderer rect_renderer{manager, window};
-		ugv::renderer::rectanglz_renderer recz_renderer{manager, window};
 
 		auto closer{manager.get_closer()};
 
-
+		rect_renderer.resize(manager, window);
 		while (window.is_open())
 			{
 			while (window.poll_event())
@@ -56,8 +64,9 @@ int main()
 			if (window.is_open())
 				{
 				rect_renderer.draw(manager, window);
-				recz_renderer.draw(manager, window);
+				//recz_renderer.draw(manager, window);
 				}
+			Sleep(100);
 			}
 		}
 	catch (const std::exception& e)

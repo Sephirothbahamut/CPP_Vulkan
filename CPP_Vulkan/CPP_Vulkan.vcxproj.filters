@@ -143,5 +143,8 @@
     <ClInclude Include="vulkan\renderer\rectanglz\renderer.h">
       <Filter>Header Files\vulkan\renderer\rectanglz</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\core\renderer.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
