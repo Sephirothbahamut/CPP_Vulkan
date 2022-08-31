@@ -24,6 +24,8 @@ namespace utils::graphics::vulkan::window
 
 			vk::Extent3D get_extent() const noexcept;
 
+			const swapchain& get_swapchain() const noexcept;
+
 			__declspec(property(get = get_extent)) vk::Extent3D extent;
 
 		private:

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <filesystem>
 
-#include <vulkan/vulkan.hpp>
+#include "../dependencies.h"
 
 #include <shaderc/shaderc.hpp>
 #include <spirv-tools/libspirv.hpp>
@@ -17,7 +17,7 @@
 
 #include "manager.h"
 
-namespace utils::graphics::vulkan
+namespace utils::graphics::vulkan::core
 {
 	namespace details
 	{
@@ -65,7 +65,7 @@ namespace utils::graphics::vulkan
 				return from_glsl(device, load_glsl(file), file.filename().string());
 			}
 
-			inline vk::PipelineShaderStageCreateInfo get_create_info()
+			inline vk::PipelineShaderStageCreateInfo get_create_info() const noexcept
 			{
 				return
 				{

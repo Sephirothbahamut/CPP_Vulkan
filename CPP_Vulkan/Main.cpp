@@ -1,7 +1,9 @@
+#include "vulkan/core/utils.h"
 #include "vulkan/core/manager.h"
 #include "vulkan/core/shader.h"
 #include "vulkan/window/window.h"
 #include "vulkan/window/window_sized_image.h"
+#include "vulkan/renderer/rectangle/renderer.h"
 
 class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>
 	{
@@ -14,17 +16,19 @@ class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::wi
 int main()
 	{
 	namespace ugv = utils::graphics::vulkan;
-	ugv::core::manager manager;
+	try
+		{
+		ugv::core::manager manager;
 
-	vulkan_window::initializer i;
-	vulkan_window window
-		{ vulkan_window::create_info
-			{
-			.title{L"Sample Window Class"},
-			},
-		manager
-		};
-	auto image = window.images.emplace
+		vulkan_window::initializer i;
+		vulkan_window window
+			{ vulkan_window::create_info
+				{
+				.title{L"Sample Window Class"},
+				},
+			manager
+			};
+		auto image = window.images.emplace
 		({
 		.imageType = vk::ImageType::e2D,
 		.format = vk::Format::eA8B8G8R8UnormPack32,
@@ -34,12 +38,21 @@ int main()
 		.tiling = vk::ImageTiling::eOptimal,
 		.usage{vk::ImageUsageFlagBits::eInputAttachment},
 		.initialLayout = vk::ImageLayout::eUndefined,
-		});
+			});
 
-	while (window.is_open())
-		{
-		while (window.poll_event())
+		ugv::renderer::rectangle_renderer rect_renderer{ manager, window };
+
+		while (window.is_open())
 			{
+			while (window.poll_event())
+				{
+				rect_renderer.draw(manager, window);
+				}
 			}
 		}
+		catch (const std::exception& e)
+			{
+			ugv::core::logger.err(e.what());
+			}
+		return 0;
 	}
