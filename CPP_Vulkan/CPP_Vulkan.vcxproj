@@ -152,6 +152,7 @@
     <ClCompile Include="vulkan\core\queues.cpp" />
     <ClCompile Include="vulkan\core\swapchain_chosen_details.cpp" />
     <ClCompile Include="vulkan\renderer\rectangle\renderer.cpp" />
+    <ClCompile Include="vulkan\renderer\rectanglz\renderez.cpp" />
     <ClCompile Include="vulkan\window\swapchain.cpp" />
     <ClCompile Include="vulkan\window\surface.cpp" />
     <ClCompile Include="vulkan\window\window.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="vulkan\core\utils.h" />
     <ClInclude Include="vulkan\dependencies.h" />
     <ClInclude Include="vulkan\renderer\rectangle\renderer.h" />
+    <ClInclude Include="vulkan\renderer\rectanglz\renderer.h" />
     <ClInclude Include="vulkan\window\swapchain.h" />
     <ClInclude Include="vulkan\window\surface.h" />
     <ClInclude Include="vulkan\window\window.h" />

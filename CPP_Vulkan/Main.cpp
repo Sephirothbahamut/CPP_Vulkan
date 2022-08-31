@@ -4,6 +4,7 @@
 #include "vulkan/window/window.h"
 #include "vulkan/window/window_sized_image.h"
 #include "vulkan/renderer/rectangle/renderer.h"
+#include "vulkan/renderer/rectanglz/renderer.h"
 
 #include <utils_win32/transparent.h>
 class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
@@ -41,19 +42,27 @@ int main()
 			.initialLayout = vk::ImageLayout::eUndefined,
 			});
 
-		ugv::renderer::rectangle_renderer rect_renderer{ manager, window };
+		ugv::renderer::rectangle_renderer rect_renderer{manager, window};
+		ugv::renderer::rectanglz_renderer recz_renderer{manager, window};
+
+		auto closer{manager.get_closer()};
+
 
 		while (window.is_open())
 			{
 			while (window.poll_event())
 				{
 				}
-			rect_renderer.draw(manager, window);
+			if (window.is_open())
+				{
+				rect_renderer.draw(manager, window);
+				recz_renderer.draw(manager, window);
+				}
 			}
 		}
-		catch (const std::exception& e)
-			{
-			ugv::core::logger.err(e.what());
-			}
-		return 0;
+	catch (const std::exception& e)
+		{
+		ugv::core::logger.err(e.what());
+		}
+	return 0;
 	}

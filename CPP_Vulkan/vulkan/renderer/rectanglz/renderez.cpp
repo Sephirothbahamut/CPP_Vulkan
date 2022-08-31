@@ -4,15 +4,15 @@
 
 namespace utils::graphics::vulkan::renderer
 	{
-	rectangle_renderer::rectangle_renderer(const core::manager& manager, const window::window& window) :
-		vertex_shader{ core::shader_vertex::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shader.vert") },
+	rectanglz_renderer::rectanglz_renderer(const core::manager& manager, const window::window& window) :
+		vertex_shader{ core::shader_vertex::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shadez.vert") },
 		fragment_shader{ core::shader_fragment::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shader.frag") },
 		vk_renderpass{ create_renderpass(manager) },
 		vk_pipeline{ create_pipeline(manager, window, vk_renderpass.get(), vertex_shader, fragment_shader) },
 		vk_framebuffers{ create_framebuffers(manager, window) }
 		{}
 
-	void rectangle_renderer::draw(core::manager& manager, const window::window& window)
+	void rectanglz_renderer::draw(core::manager& manager, const window::window& window)
 		{
 		auto current_flying_frame { manager.getter(this).flying_frames_pool().get() };
 		auto& device              { manager.getter(this).device() };
@@ -56,7 +56,7 @@ namespace utils::graphics::vulkan::renderer
 		swapchain.present(manager, current_flying_frame.vk_semaphore_render_finished, image_index);
 		}
 
-	vk::UniqueRenderPass rectangle_renderer::create_renderpass(const core::manager& manager) const
+	vk::UniqueRenderPass rectanglz_renderer::create_renderpass(const core::manager& manager) const
 		{
 		vk::AttachmentDescription color_attachment_description; // attachment specified for color and/or depth buffers
 		color_attachment_description.format = manager.getter(this).swapchain_chosen_details().get_format().format;
@@ -110,7 +110,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	vk::UniquePipeline rectangle_renderer::create_pipeline(const core::manager& manager, const window::window& window, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
+	vk::UniquePipeline rectanglz_renderer::create_pipeline(const core::manager& manager, const window::window& window, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
 		{
 		std::vector<vk::DynamicState> dynamic_states;
 
@@ -241,7 +241,7 @@ namespace utils::graphics::vulkan::renderer
 		return std::move(ret.value);
 		}
 
-	vk::UniqueFramebuffer rectangle_renderer::create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const
+	vk::UniqueFramebuffer rectanglz_renderer::create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const
 		{
 		vk::UniqueFramebuffer ret;
 		try
@@ -267,7 +267,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	std::vector<vk::UniqueFramebuffer> rectangle_renderer::create_framebuffers(const core::manager& manager, const window::window& window) const
+	std::vector<vk::UniqueFramebuffer> rectanglz_renderer::create_framebuffers(const core::manager& manager, const window::window& window) const
 		{
 		auto& swapchain{ window.get_swapchain() };
 		std::vector<vk::UniqueFramebuffer> ret;
@@ -283,7 +283,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	void rectangle_renderer::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index)
+	void rectanglz_renderer::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index)
 		{
 		vk::CommandBufferBeginInfo beginInfo; // for now empty is okay (we dont need primary/secondary buffer info or flags)
 		try {

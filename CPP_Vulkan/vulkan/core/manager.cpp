@@ -1,5 +1,7 @@
 #include "manager.h"
 
+#include "utils.h"
+
 namespace utils::graphics::vulkan::core
 	{
 		manager::manager() :
@@ -106,6 +108,48 @@ namespace utils::graphics::vulkan::core
 			}
 
 		const queues& manager::getter_flying_frames_pool::queues() const noexcept
+			{
+			return manager_ptr->queues;
+			}
+
+
+		// getter_rectanglz_renderer
+		manager::getter_rectanglz_renderer::getter_rectanglz_renderer(manager& manager) : manager_ptr{&manager} {}
+
+		const vk::Device& manager::getter_rectanglz_renderer::device() const noexcept
+			{
+			return manager_ptr->device.get();
+			}
+
+		const swapchain_chosen_details& manager::getter_rectanglz_renderer::swapchain_chosen_details() const noexcept
+			{
+			return manager_ptr->swapchain_chosen_details;
+			}
+
+		const queues& manager::getter_rectanglz_renderer::queues() const noexcept
+			{
+			return manager_ptr->queues;
+			}
+
+		flying_frames_pool& manager::getter_rectanglz_renderer::flying_frames_pool() noexcept
+			{
+			return manager_ptr->flying_frames_pool;
+			}
+
+		// getter_rectanglz_renderer_const
+		manager::getter_rectanglz_renderer_const::getter_rectanglz_renderer_const(const manager& manager) : manager_ptr{&manager} {}
+
+		const vk::Device& manager::getter_rectanglz_renderer_const::device() const noexcept
+			{
+			return manager_ptr->device.get();
+			}
+
+		const swapchain_chosen_details& manager::getter_rectanglz_renderer_const::swapchain_chosen_details() const noexcept
+			{
+			return manager_ptr->swapchain_chosen_details;
+			}
+
+		const queues& manager::getter_rectanglz_renderer_const::queues() const noexcept
 			{
 			return manager_ptr->queues;
 			}

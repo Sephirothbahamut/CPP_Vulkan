@@ -17,10 +17,6 @@ namespace utils::graphics::vulkan::window
 		{
 		public:
 			window(const core::manager& manager);
-			~window() 
-				{
-				manager_ptr->getter(this).device().waitIdle();
-				}
 
 			std::optional<LRESULT> procedure(UINT msg, WPARAM wparam, LPARAM lparam);
 
