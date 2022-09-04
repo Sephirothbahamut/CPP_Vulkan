@@ -5,7 +5,9 @@
 #include "vulkan/window/window_sized_image.h"
 #include "vulkan/core/renderer.h"
 #include "vulkan/renderer/rectangle/renderer.h"
-#include "vulkan/renderer/rectanglz/renderer.h"
+#include "vulkan/renderer/3d/renderer.h"
+
+#include "vulkan/core/model.h"
 
 #include <utils_win32/transparent.h>
 class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
@@ -24,10 +26,11 @@ int main()
 		{
 		ugv::core::manager manager;
 
-		ugv::renderer::rectangle_renderer rect_renderer{manager};
-		//ugv::renderer::rectanglz_renderer recz_renderer{manager, window};
+		//ugv::renderer::rectangle_renderer rect_renderer{manager};
+		Model model = load_model("data/models/spyro/spyro.obj");
+		ugv::renderer::renderer_3d renderer_3d{manager, model};
 
-		std::vector<utils::observer_ptr<ugv::core::renderer>> renderer_ptrs{&rect_renderer};
+		std::vector<utils::observer_ptr<ugv::core::renderer>> renderer_ptrs{&renderer_3d};
 
 
 		vulkan_window::initializer i;
@@ -52,10 +55,9 @@ int main()
 			.initialLayout = vk::ImageLayout::eUndefined,
 			});
 
-
 		auto closer{manager.get_closer()};
 
-		rect_renderer.resize(manager, window);
+		renderer_3d.resize(manager, window);
 		while (window.is_open())
 			{
 			while (window.poll_event())
@@ -63,7 +65,8 @@ int main()
 				}
 			if (window.is_open())
 				{
-				rect_renderer.draw(manager, window);
+				if(window.width & window.height)
+					renderer_3d.draw(manager, window);
 				//recz_renderer.draw(manager, window);
 				}
 			Sleep(100);

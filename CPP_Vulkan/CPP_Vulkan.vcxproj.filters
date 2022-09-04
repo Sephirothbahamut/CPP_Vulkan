@@ -37,17 +37,17 @@
     <Filter Include="Source Files\vulkan\renderer">
       <UniqueIdentifier>{acac7f91-e743-4410-aa69-f4b3170a98a7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\vulkan\renderer\rectanglz">
-      <UniqueIdentifier>{192cab7a-fdcf-4020-b833-804135903b1d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\vulkan\renderer\rectangle">
       <UniqueIdentifier>{ddd42507-c127-47da-9744-4a59abddb3ea}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\vulkan\renderer\rectanglz">
-      <UniqueIdentifier>{9d0b5ce9-8742-4464-b224-375d5e56c5ae}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\vulkan\renderer\rectangle">
       <UniqueIdentifier>{94e94757-b875-46e6-9ce6-f30fb56ab12b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vulkan\renderer\3d">
+      <UniqueIdentifier>{192cab7a-fdcf-4020-b833-804135903b1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\vulkan\renderer\3d">
+      <UniqueIdentifier>{9d0b5ce9-8742-4464-b224-375d5e56c5ae}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -90,8 +90,11 @@
     <ClCompile Include="vulkan\renderer\rectangle\renderer.cpp">
       <Filter>Source Files\vulkan\renderer\rectangle</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\renderer\rectanglz\renderez.cpp">
-      <Filter>Source Files\vulkan\renderer\rectanglz</Filter>
+    <ClCompile Include="vulkan\renderer\3d\renderer.cpp">
+      <Filter>Source Files\vulkan\renderer\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\libraries_implementation.cpp">
+      <Filter>Source Files\vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -140,10 +143,13 @@
     <ClInclude Include="vulkan\renderer\rectangle\renderer.h">
       <Filter>Header Files\vulkan\renderer\rectangle</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\renderer\rectanglz\renderer.h">
-      <Filter>Header Files\vulkan\renderer\rectanglz</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\core\renderer.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\renderer\3d\renderer.h">
+      <Filter>Header Files\vulkan\renderer\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\core\model.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
   </ItemGroup>

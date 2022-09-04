@@ -1,19 +1,38 @@
 #include "renderer.h"
 
 #include <array>
+#include <utils/compilation/debug.h>
+
+#include "../../core/model.h"
 
 namespace utils::graphics::vulkan::renderer
 	{
-	rectanglz_renderer::rectanglz_renderer(const core::manager& manager, const window::window& window) :
-		vertex_shader{ core::shader_vertex::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shadez.vert") },
-		fragment_shader{ core::shader_fragment::from_glsl_file(manager.getter(this).device(), "data/shaders/rectangle/shader.frag") },
-		vk_renderpass{ create_renderpass(manager) },
-		vk_pipeline{ create_pipeline(manager, window, vk_renderpass.get(), vertex_shader, fragment_shader) },
-		vk_framebuffers{ create_framebuffers(manager, window) }
-		{}
-
-	void rectanglz_renderer::draw(core::manager& manager, const window::window& window)
+	renderer_3d::renderer_3d(const core::manager& manager, const Model& model)  :
+		vertex_shader   { core::shader_vertex  ::from_spirv_file(manager.getter(this).device(), "data/shaders/drawmesh/vert.spv") },
+		fragment_shader { core::shader_fragment::from_spirv_file(manager.getter(this).device(), "data/shaders/drawmesh/frag.spv") },
+		vk_unique_renderpass   { create_renderpass(manager) },
+		vk_unique_pipeline     { create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
+		vk_unique_buffer       { create_buffer(manager, model)},
+		vk_unique_memory       { create_memory(manager) },
+		vertices_count         { model.vertices.size() }
 		{
+		bind_memory(manager);
+		fill_memory(manager, model);
+		}
+
+
+	void renderer_3d::resize(const core::manager& manager, const window::window& window)
+		{
+		vk_unique_framebuffers = create_framebuffers(manager, window);
+		}
+
+	void renderer_3d::draw(core::manager& manager, const window::window& window)
+		{
+		if constexpr (utils::compilation::debug)
+			{
+			if (vk_unique_framebuffers.empty()) { throw std::runtime_error{"You forgot to call resize on the current window."}; }
+			}
+
 		auto current_flying_frame { manager.getter(this).flying_frames_pool().get() };
 		auto& device              { manager.getter(this).device() };
 		auto& swapchain           { window.get_swapchain() };
@@ -56,7 +75,7 @@ namespace utils::graphics::vulkan::renderer
 		swapchain.present(manager, current_flying_frame.vk_semaphore_render_finished, image_index);
 		}
 
-	vk::UniqueRenderPass rectanglz_renderer::create_renderpass(const core::manager& manager) const
+	vk::UniqueRenderPass renderer_3d::create_renderpass(const core::manager& manager) const
 		{
 		vk::AttachmentDescription color_attachment_description; // attachment specified for color and/or depth buffers
 		color_attachment_description.format = manager.getter(this).swapchain_chosen_details().get_format().format;
@@ -110,7 +129,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	vk::UniquePipeline rectanglz_renderer::create_pipeline(const core::manager& manager, const window::window& window, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
+	vk::UniquePipeline renderer_3d::create_pipeline(const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
 		{
 		std::vector<vk::DynamicState> dynamic_states;
 
@@ -118,13 +137,15 @@ namespace utils::graphics::vulkan::renderer
 
 		vk::PipelineViewportStateCreateInfo viewport_state;
 
+		//Specific window size not needed since we're using a dynamic state that is set with the command buffer.
 		dynamic_states.push_back(vk::DynamicState::eViewport);
-		std::vector<vk::Viewport> viewports{ vk::Viewport{.x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f} } };
+		std::vector<vk::Viewport> viewports{vk::Viewport{.x{0}, .y{0}, .width{0.f}, .height{0.f}, .minDepth{0.f}, .maxDepth{1.f} }};
 		viewport_state.viewportCount = viewports.size();
 		viewport_state.pViewports = viewports.data();
 
+		//Specific window size not needed since we're using a dynamic state that is set with the command buffer.
 		dynamic_states.push_back(vk::DynamicState::eScissor);
-		std::vector<vk::Rect2D> scissors{ vk::Rect2D{.offset{0, 0}, .extent{window.width, window.height}} };
+		std::vector<vk::Rect2D> scissors{vk::Rect2D{.offset{0, 0}, .extent{0, 0}}};
 		viewport_state.scissorCount = scissors.size();
 		viewport_state.pScissors = scissors.data();
 
@@ -191,12 +212,14 @@ namespace utils::graphics::vulkan::renderer
 			}
 
 		// Render pass
+		auto vertex_binding_description   = Vertex::getBindingDescription();
+		auto vertex_attribute_description = Vertex::getAttributeDescriptions();
 		vk::PipelineVertexInputStateCreateInfo vertex_input_create_info
 			{
-				.vertexBindingDescriptionCount  { 0 },
-				.pVertexBindingDescriptions     { nullptr }, // Optional TODO fill with actual bindings later on with tutorial
-				.vertexAttributeDescriptionCount{ 0 },
-				.pVertexAttributeDescriptions   { nullptr }, // Optional
+				.vertexBindingDescriptionCount  { 1 },
+				.pVertexBindingDescriptions     { &vertex_binding_description }, // Optional TODO fill with actual bindings later on with tutorial
+				.vertexAttributeDescriptionCount{ 4 },
+				.pVertexAttributeDescriptions   { vertex_attribute_description.data() }, // Optional
 			};
 		vk::PipelineInputAssemblyStateCreateInfo input_assembly_create_info
 			{
@@ -241,7 +264,7 @@ namespace utils::graphics::vulkan::renderer
 		return std::move(ret.value);
 		}
 
-	vk::UniqueFramebuffer rectanglz_renderer::create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const
+	vk::UniqueFramebuffer renderer_3d::create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const
 		{
 		vk::UniqueFramebuffer ret;
 		try
@@ -251,7 +274,7 @@ namespace utils::graphics::vulkan::renderer
 				{ manager.getter(this).device().createFramebufferUnique(
 					vk::FramebufferCreateInfo
 					{
-						.renderPass      { vk_renderpass.get() },
+						.renderPass      { vk_unique_renderpass.get() },
 						.attachmentCount { 1 },
 						.pAttachments    { attachments.data() },
 						.width           { window.width },
@@ -267,7 +290,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	std::vector<vk::UniqueFramebuffer> rectanglz_renderer::create_framebuffers(const core::manager& manager, const window::window& window) const
+	std::vector<vk::UniqueFramebuffer> renderer_3d::create_framebuffers(const core::manager& manager, const window::window& window) const
 		{
 		auto& swapchain{ window.get_swapchain() };
 		std::vector<vk::UniqueFramebuffer> ret;
@@ -283,7 +306,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	void rectanglz_renderer::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index)
+	void renderer_3d::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index)
 		{
 		vk::CommandBufferBeginInfo beginInfo; // for now empty is okay (we dont need primary/secondary buffer info or flags)
 		try {
@@ -298,8 +321,8 @@ namespace utils::graphics::vulkan::renderer
 
 		vk::RenderPassBeginInfo renderPassInfo
 			{
-				.renderPass  {vk_renderpass.get()},
-				.framebuffer {vk_framebuffers[image_index].get()},
+				.renderPass  {vk_unique_renderpass.get()},
+				.framebuffer {vk_unique_framebuffers[image_index].get()},
 				.renderArea
 				{
 					.offset { 0, 0 },
@@ -311,12 +334,16 @@ namespace utils::graphics::vulkan::renderer
 
 		command_buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 
-		command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, vk_pipeline.get());
+		command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, vk_unique_pipeline.get());
 
-		command_buffer.setViewport(0, vk::Viewport{ .x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f} });
-		command_buffer.setScissor(0, vk::Rect2D{ .offset{0, 0}, .extent{window.width, window.height} });
+		command_buffer.setViewport(0, vk::Viewport{  .x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f} });
+		command_buffer.setScissor (0, vk::Rect2D  { .offset{0, 0}, .extent{window.width, window.height} });
 
-		command_buffer.draw(6, 1, 0, 0);
+		vk::Buffer vertex_buffers[] = { vk_unique_buffer.get() };
+		vk::DeviceSize offsets[] = { 0 };
+		command_buffer.bindVertexBuffers(0, 1, vertex_buffers, offsets);
+
+		command_buffer.draw(vertices_count, 1, 0, 0);
 
 		command_buffer.endRenderPass();
 

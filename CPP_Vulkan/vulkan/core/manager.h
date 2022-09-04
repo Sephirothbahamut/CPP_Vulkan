@@ -14,7 +14,7 @@
 #include "flying_frames_pool.h"
 
 namespace utils::graphics::vulkan::window   { class window; class swapchain; class window_sized_images; }
-namespace utils::graphics::vulkan::renderer { class rectangle_renderer; class rectanglz_renderer; }
+namespace utils::graphics::vulkan::renderer { class rectangle_renderer; class renderer_3d; }
 
 namespace utils::graphics::vulkan::core
 	{
@@ -103,7 +103,7 @@ namespace utils::graphics::vulkan::core
 
 			class getter_rectangle_renderer
 				{
-				friend class renderer::rectangle_renderer;
+				friend class vulkan::renderer::rectangle_renderer;
 				friend class manager;
 
 				getter_rectangle_renderer(manager& manager);
@@ -117,7 +117,7 @@ namespace utils::graphics::vulkan::core
 				};
 			class getter_rectangle_renderer_const
 				{
-				friend class renderer::rectangle_renderer;
+				friend class vulkan::renderer::rectangle_renderer;
 				friend class manager;
 
 				getter_rectangle_renderer_const(const manager& manager);
@@ -128,13 +128,14 @@ namespace utils::graphics::vulkan::core
 
 				utils::observer_ptr<const manager> manager_ptr;
 				};
-			class getter_rectanglz_renderer
+			class getter_renderer_3d
 				{
-				friend class renderer::rectanglz_renderer;
+				friend class vulkan::renderer::renderer_3d;
 				friend class manager;
 
-				getter_rectanglz_renderer(manager& manager);
+				getter_renderer_3d(manager& manager);
 
+				const vk::PhysicalDevice& physical_device() const noexcept;
 				const vk::Device& device() const noexcept;
 				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
 				const core::queues& queues() const noexcept;
@@ -142,13 +143,14 @@ namespace utils::graphics::vulkan::core
 
 				utils::observer_ptr<manager> manager_ptr;
 				};
-			class getter_rectanglz_renderer_const
+			class getter_renderer_3d_const
 				{
-				friend class renderer::rectanglz_renderer;
+				friend class vulkan::renderer::renderer_3d;
 				friend class manager;
 
-				getter_rectanglz_renderer_const(const manager& manager);
+				getter_renderer_3d_const(const manager& manager);
 
+				const vk::PhysicalDevice& physical_device() const noexcept;
 				const vk::Device& device() const noexcept;
 				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
 				const core::queues& queues() const noexcept;
@@ -161,19 +163,19 @@ namespace utils::graphics::vulkan::core
 			friend class getter_window_sized_images;
 			friend class getter_rectangle_renderer;
 			friend class getter_rectangle_renderer_const;
-			friend class getter_rectanglz_renderer;
-			friend class getter_rectanglz_renderer_const;
+			friend class getter_renderer_3d;
+			friend class getter_renderer_3d_const;
 			friend class getter_flying_frames_pool;
 #pragma endregion
 
-			inline getter_window                   getter(const window  ::window*)              const noexcept { return { *this }; }
-			inline getter_swapchain                getter(const window  ::swapchain*)           const noexcept { return { *this }; }
-			inline getter_window_sized_images      getter(const window  ::window_sized_images*) const noexcept { return { *this }; }
-			inline getter_flying_frames_pool       getter(const core    ::flying_frames_pool*)  const noexcept { return { *this }; }
-			inline getter_rectangle_renderer       getter(const renderer::rectangle_renderer*)        noexcept { return {*this}; }
-			inline getter_rectangle_renderer_const getter(const renderer::rectangle_renderer*)  const noexcept { return {*this}; }
-			inline getter_rectanglz_renderer       getter(const renderer::rectanglz_renderer*)        noexcept { return {*this}; }
-			inline getter_rectanglz_renderer_const getter(const renderer::rectanglz_renderer*)  const noexcept { return {*this}; }
+			inline getter_window                   getter(const window          ::window*)              const noexcept { return { *this }; }
+			inline getter_swapchain                getter(const window          ::swapchain*)           const noexcept { return { *this }; }
+			inline getter_window_sized_images      getter(const window          ::window_sized_images*) const noexcept { return { *this }; }
+			inline getter_flying_frames_pool       getter(const core            ::flying_frames_pool*)  const noexcept { return { *this }; }
+			inline getter_rectangle_renderer       getter(const vulkan::renderer::rectangle_renderer*)        noexcept { return { *this }; }
+			inline getter_rectangle_renderer_const getter(const vulkan::renderer::rectangle_renderer*)  const noexcept { return { *this }; }
+			inline getter_renderer_3d              getter(const vulkan::renderer::renderer_3d*)               noexcept { return { *this }; }
+			inline getter_renderer_3d_const        getter(const vulkan::renderer::renderer_3d*)         const noexcept { return { *this }; }
 
 			
 		};
