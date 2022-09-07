@@ -44,6 +44,21 @@ namespace utils::graphics::vulkan::core::details
 		return std::nullopt;
 		}
 
+	inline uint32_t find_memory_type(const vk::PhysicalDevice& physical_device, uint32_t type_filter, vk::MemoryPropertyFlags required_properties)
+		{
+		vk::PhysicalDeviceMemoryProperties mem_properties{ physical_device.getMemoryProperties() };
+
+		for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++)
+			{
+			if ((type_filter & (1 << i)) && ((mem_properties.memoryTypes[i].propertyFlags & required_properties) == required_properties))
+				{
+				return i;
+				}
+			}
+
+		throw std::runtime_error("failed to find suitable memory type!");
+		}
+
 	struct validation_layers
 		{
 		inline static constexpr bool enabled{ utils::compilation::debug };

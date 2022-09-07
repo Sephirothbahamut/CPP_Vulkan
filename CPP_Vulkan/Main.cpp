@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "vulkan/core/utils.h"
 #include "vulkan/core/manager.h"
 #include "vulkan/core/shader.h"
@@ -27,7 +29,8 @@ int main()
 		ugv::core::manager manager;
 
 		//ugv::renderer::rectangle_renderer rect_renderer{manager};
-		Model model = load_model("data/models/spyro/spyro.obj");
+		//Model model = load_model("data/models/spyro/spyro.obj");
+		Model model = load_model("data/models/bunny.obj");
 		ugv::renderer::renderer_3d renderer_3d{manager, model};
 
 		std::vector<utils::observer_ptr<ugv::core::renderer>> renderer_ptrs{&renderer_3d};
@@ -45,31 +48,40 @@ int main()
 			};
 		auto image = window.images.emplace(
 			{
-			.imageType = vk::ImageType::e2D,
+			.image_type = vk::ImageType::e2D,
 			.format = vk::Format::eA8B8G8R8UnormPack32,
-			.mipLevels = 1,
-			.arrayLayers = 1,
+			.mip_levels = 1,
+			.array_layers = 1,
 			.samples = vk::SampleCountFlagBits::e1,
 			.tiling = vk::ImageTiling::eOptimal,
 			.usage{vk::ImageUsageFlagBits::eInputAttachment},
-			.initialLayout = vk::ImageLayout::eUndefined,
-			});
+			.initial_layout = vk::ImageLayout::eUndefined,
+			}, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 		auto closer{manager.get_closer()};
 
 		renderer_3d.resize(manager, window);
+
+
+		std::chrono::time_point prev_step_time { std::chrono::high_resolution_clock::now() };
+		std::chrono::time_point curr_step_time { std::chrono::high_resolution_clock::now() };
+
+		uint32_t frames_counter{ 0 };
+
 		while (window.is_open())
 			{
+			prev_step_time = curr_step_time;
+			curr_step_time = std::chrono::high_resolution_clock::now();
+
+			std::chrono::duration<float> step_delta_time{ curr_step_time - prev_step_time };
 			while (window.poll_event())
 				{
 				}
 			if (window.is_open())
 				{
 				if(window.width & window.height)
-					renderer_3d.draw(manager, window);
-				//recz_renderer.draw(manager, window);
+					renderer_3d.draw(manager, window, step_delta_time.count());
 				}
-			Sleep(100);
 			}
 		}
 	catch (const std::exception& e)

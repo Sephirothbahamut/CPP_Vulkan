@@ -5,16 +5,33 @@
 namespace utils::graphics::vulkan::core
 	{
 		manager::manager() :
-			instance           { "name", debug_messenger::create_info() },
-			dld                { instance.get(), vkGetInstanceProcAddr },
-#ifdef utils_is_debug
-			debug_messenger    { instance.get(), dld },
-#endif
-			physical_device    { instance.get(), /* out */ swapchain_chosen_details},
-			device             { physical_device, physical_device.get_graphics_family_index(), physical_device.get_present_family_index() },
-			queues             { device.get(),    physical_device.get_graphics_family_index(), physical_device.get_present_family_index() },
-			flying_frames_pool { device.get(), queues }
+			instance                         { "name", debug_messenger::create_info() },
+			dld                              { instance.get(), vkGetInstanceProcAddr },
+#ifdef utils_is_debug		                 
+			debug_messenger                  { instance.get(), dld },
+#endif						                 
+			physical_device                  { instance.get(), /* out */ swapchain_chosen_details},
+			device                           { physical_device, physical_device.get_graphics_family_index(), physical_device.get_present_family_index() },
+			queues                           { device.get(),    physical_device.get_graphics_family_index(), physical_device.get_present_family_index() },
+			flying_frames_pool               { device.get(), queues },
+			vk_unique_memory_op_command_pool { create_memory_op_command_pool() }
 			{}
+
+		vk::UniqueCommandPool manager::create_memory_op_command_pool()
+		{
+			try
+				{
+				return device.get().createCommandPoolUnique
+				({
+					.flags{vk::CommandPoolCreateFlagBits::eResetCommandBuffer | vk::CommandPoolCreateFlagBits::eTransient},
+					.queueFamilyIndex{queues.get_graphics().index},
+					});
+				}
+			catch (vk::SystemError err)
+				{
+				throw std::runtime_error{ "Failed to create command pool!" };
+				}
+		}
 
 		// getter_window
 		manager::getter_window::getter_window(const manager& manager) : manager_ptr{ &manager } {}
@@ -52,10 +69,15 @@ namespace utils::graphics::vulkan::core
 			return manager_ptr->queues;
 			}
 
-		// getter_window_sized_images
-		manager::getter_window_sized_images::getter_window_sized_images(const manager& manager) : manager_ptr{ &manager } {}
+		// getter_image
+		manager::getter_image::getter_image(const manager& manager) : manager_ptr{ &manager } {}
 
-		const vk::Device& manager::getter_window_sized_images::device() const noexcept
+		const vk::PhysicalDevice& manager::getter_image::physical_device() const noexcept
+			{
+			return manager_ptr->physical_device;
+			}
+
+		const vk::Device& manager::getter_image::device() const noexcept
 			{
 			return manager_ptr->device.get();
 			}
@@ -141,6 +163,11 @@ namespace utils::graphics::vulkan::core
 			return manager_ptr->flying_frames_pool;
 			}
 
+		vk::CommandPool& manager::getter_renderer_3d::memory_op_command_pool() noexcept
+			{
+			return manager_ptr->vk_unique_memory_op_command_pool.get();
+			}
+
 		// getter_renderer_3d_const
 		manager::getter_renderer_3d_const::getter_renderer_3d_const(const manager& manager) : manager_ptr{&manager} {}
 
@@ -163,4 +190,5 @@ namespace utils::graphics::vulkan::core
 			{
 			return manager_ptr->queues;
 			}
-	}
+		
+}

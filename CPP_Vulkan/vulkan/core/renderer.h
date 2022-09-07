@@ -11,7 +11,7 @@ namespace utils::graphics::vulkan::core
 
 			virtual void resize(const core::manager& manager, const window::window& window) = 0;
 
-			virtual void draw(core::manager& manager, const window::window& window) = 0;
+			virtual void draw(core::manager& manager, const window::window& window, float delta_time) = 0;
 
 		private:
 		

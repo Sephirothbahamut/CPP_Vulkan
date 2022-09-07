@@ -14,7 +14,7 @@ namespace utils::graphics::vulkan::renderer
 
 			void resize(const core::manager& manager, const window::window& window) final override;
 
-			void draw(core::manager& manager, const window::window& window) final override;
+			void draw(core::manager& manager, const window::window& window, float delta_time) final override;
 
 		private:
 			core::shader_vertex                 vertex_shader  ;

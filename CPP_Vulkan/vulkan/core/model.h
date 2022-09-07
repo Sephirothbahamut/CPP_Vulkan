@@ -7,10 +7,19 @@
 
 #include <tiny_obj_loader.h>
 
+//add the include for glm to get matrices
+#include <glm/glm.hpp>
+
+struct Mesh_Push_Constants 
+	{
+	glm::vec4 data;
+	glm::mat4 render_matrix;
+	};
+
 struct Vertex
 	{
 	utils::math::vec3f position;
-	utils::beta::graphics::rgba<float> color;
+	utils::beta::graphics::colors::rgb<float, 4> color;
 	utils::math::vec3f normal;
 	utils::math::vec2<float> tex_coord;
 

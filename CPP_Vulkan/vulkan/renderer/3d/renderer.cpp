@@ -4,20 +4,48 @@
 #include <utils/compilation/debug.h>
 
 #include "../../core/model.h"
+#include "../../core/utils.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 namespace utils::graphics::vulkan::renderer
 	{
-	renderer_3d::renderer_3d(const core::manager& manager, const Model& model)  :
-		vertex_shader   { core::shader_vertex  ::from_spirv_file(manager.getter(this).device(), "data/shaders/drawmesh/vert.spv") },
-		fragment_shader { core::shader_fragment::from_spirv_file(manager.getter(this).device(), "data/shaders/drawmesh/frag.spv") },
-		vk_unique_renderpass   { create_renderpass(manager) },
-		vk_unique_pipeline     { create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
-		vk_unique_buffer       { create_buffer(manager, model)},
-		vk_unique_memory       { create_memory(manager) },
-		vertices_count         { model.vertices.size() }
+	renderer_3d::renderer_3d(core::manager& manager, const Model& model)  :
+		vertex_shader                  { core::shader_vertex  ::from_spirv_file(manager.getter(this).device(), "data/shaders/drawmesh/vert.spv") },
+		fragment_shader                { core::shader_fragment::from_spirv_file(manager.getter(this).device(), "data/shaders/drawmesh/frag.spv") },
+		vk_unique_renderpass           { create_renderpass(manager) },
+		vk_unique_pipeline_layout      { create_pipeline_layout(manager)},
+		vk_unique_pipeline             { create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
+
+		vk_unique_staging_vertex_buffer{ create_buffer(manager, model, vk::BufferUsageFlagBits::eTransferSrc, sizeof(model.vertices[0]) * model.vertices.size())},
+		vk_unique_staging_vertex_memory{ create_memory(manager, vk_unique_staging_vertex_buffer.get(), vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) },
+
+		vk_unique_staging_index_buffer { create_buffer(manager, model, vk::BufferUsageFlagBits::eTransferSrc, sizeof(model.indices[0]) * model.indices.size()) },
+		vk_unique_staging_index_memory { create_memory(manager, vk_unique_staging_index_buffer.get(), vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) },
+		
+		vk_unique_vertex_buffer        { create_buffer(manager, model, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, sizeof(model.vertices[0]) * model.vertices.size()) },
+		vk_unique_vertex_memory        { create_memory(manager, vk_unique_vertex_buffer.get(), vk::MemoryPropertyFlagBits::eDeviceLocal) },
+
+		vk_unique_index_buffer         { create_buffer(manager, model, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, sizeof(model.indices[0]) * model.indices.size()) },
+		vk_unique_index_memory         { create_memory(manager, vk_unique_index_buffer.get(), vk::MemoryPropertyFlagBits::eDeviceLocal) },
+		
+		vertices_count                 { model.vertices.size() },
+		indices_count                  { model.indices .size() }
 		{
-		bind_memory(manager);
-		fill_memory(manager, model);
+		const auto& device{ manager.getter(this).device() };
+		device.bindBufferMemory(vk_unique_staging_vertex_buffer.get(), vk_unique_staging_vertex_memory.get(), 0);
+		device.bindBufferMemory(vk_unique_vertex_buffer .get(), vk_unique_vertex_memory .get(), 0);
+
+		device.bindBufferMemory(vk_unique_staging_index_buffer.get(), vk_unique_staging_index_memory.get(), 0);
+		device.bindBufferMemory(vk_unique_index_buffer.get(), vk_unique_index_memory.get(), 0);
+		
+		fill_staging_memory(manager, model, vk_unique_staging_vertex_buffer.get(), vk_unique_staging_vertex_memory.get(), model.vertices);
+		fill_staging_memory(manager, model, vk_unique_staging_index_buffer .get(), vk_unique_staging_index_memory .get(), model.indices );
+		
+		copy_buffer(manager, vk_unique_staging_vertex_buffer.get(), vk_unique_vertex_buffer.get(), model.vertices.size() * sizeof(model.vertices[0]));
+		copy_buffer(manager, vk_unique_staging_index_buffer .get(), vk_unique_index_buffer .get(), model.indices .size() * sizeof(model.indices [0]));
+		
 		}
 
 
@@ -26,7 +54,7 @@ namespace utils::graphics::vulkan::renderer
 		vk_unique_framebuffers = create_framebuffers(manager, window);
 		}
 
-	void renderer_3d::draw(core::manager& manager, const window::window& window)
+	void renderer_3d::draw(core::manager& manager, const window::window& window, float delta_time)
 		{
 		if constexpr (utils::compilation::debug)
 			{
@@ -46,7 +74,7 @@ namespace utils::graphics::vulkan::renderer
 		uint32_t image_index = swapchain.next_image(manager, current_flying_frame.vk_semaphore_image_available);
 		current_flying_frame.vk_command_buffer.reset();
 
-		record_commands(window, current_flying_frame.vk_command_buffer, image_index);
+		record_commands(window, current_flying_frame.vk_command_buffer, image_index, delta_time);
 
 		vk::Semaphore          wait_semaphores  []{ current_flying_frame.vk_semaphore_image_available };
 		vk::Semaphore          signal_semaphores[]{ current_flying_frame.vk_semaphore_render_finished };
@@ -129,6 +157,35 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
+	vk::UniquePipelineLayout renderer_3d::create_pipeline_layout(const core::manager& manager) const
+		{
+		vk::PushConstantRange push_constant
+			{
+				.stageFlags{ vk::ShaderStageFlagBits::eVertex },
+				.offset{ 0 },
+				.size{ sizeof(Mesh_Push_Constants) },
+			};
+
+		vk::PipelineLayoutCreateInfo pipeline_layout_info
+			{
+				.setLayoutCount { 0 }, // Optional
+				.pSetLayouts { nullptr }, // Optional
+				.pushConstantRangeCount { 1 },
+				.pPushConstantRanges { &push_constant },
+			};
+
+		vk::UniquePipelineLayout pipeline_layout;
+		try
+			{
+			pipeline_layout = manager.getter(this).device().createPipelineLayoutUnique(pipeline_layout_info);
+			}
+		catch (vk::SystemError err)
+			{
+			throw std::runtime_error("Failed to create pipeline layout!");
+			}
+		return pipeline_layout;
+		}
+
 	vk::UniquePipeline renderer_3d::create_pipeline(const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
 		{
 		std::vector<vk::DynamicState> dynamic_states;
@@ -159,7 +216,7 @@ namespace utils::graphics::vulkan::renderer
 		rasterizer.polygonMode = vk::PolygonMode::eFill;
 		rasterizer.lineWidth = 1.f;
 		rasterizer.cullMode = vk::CullModeFlagBits::eBack;
-		rasterizer.frontFace = vk::FrontFace::eClockwise;
+		rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
 		rasterizer.depthBiasEnable = VK_FALSE;
 		rasterizer.depthBiasConstantFactor = 0.0f; // Optional
 		rasterizer.depthBiasClamp = 0.0f; // Optional
@@ -195,22 +252,6 @@ namespace utils::graphics::vulkan::renderer
 		color_blending.blendConstants[2] = 0.0f; // Optional
 		color_blending.blendConstants[3] = 0.0f; // Optional
 
-		vk::PipelineLayoutCreateInfo pipeline_layout_info
-			{
-				.setLayoutCount { 0 }, // Optional
-				.pushConstantRangeCount { 0 }, // Optional
-			};
-
-		vk::UniquePipelineLayout pipeline_layout;
-		try
-			{
-			pipeline_layout = manager.getter(this).device().createPipelineLayoutUnique(pipeline_layout_info);
-			}
-		catch (vk::SystemError err)
-			{
-			throw std::runtime_error("Failed to create pipeline layout!");
-			}
-
 		// Render pass
 		auto vertex_binding_description   = Vertex::getBindingDescription();
 		auto vertex_attribute_description = Vertex::getAttributeDescriptions();
@@ -244,7 +285,7 @@ namespace utils::graphics::vulkan::renderer
 			.pDynamicState { &dynamic_state_info },
 
 			//fixed-function setup
-			.layout { pipeline_layout.get() },
+			.layout { vk_unique_pipeline_layout.get() },
 
 			//render-pass setup
 			.renderPass { renderpass },
@@ -306,7 +347,75 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	void renderer_3d::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index)
+	vk::UniqueBuffer renderer_3d::create_buffer(const core::manager& manager, const Model& model, vk::BufferUsageFlags usage_flags, size_t size) const
+		{
+		vk::BufferCreateInfo bufferInfo
+			{
+				.size        { size },
+				.usage       { usage_flags },
+				.sharingMode { vk::SharingMode::eExclusive },
+			};
+		return manager.getter(this).device().createBufferUnique(bufferInfo);
+		}
+
+	vk::UniqueDeviceMemory renderer_3d::create_memory(const core::manager& manager, const vk::Buffer& buffer, vk::MemoryPropertyFlags mem_props_flags) const
+		{
+		const auto& device{ manager.getter(this).device() };
+
+		vk::MemoryRequirements mem_requirements{ device.getBufferMemoryRequirements(buffer) };
+
+		vk::MemoryAllocateInfo alloc_info
+			{
+			.allocationSize{mem_requirements.size},
+			.memoryTypeIndex{core::details::find_memory_type(manager.getter(this).physical_device(), mem_requirements.memoryTypeBits, mem_props_flags)}
+			};
+		return device.allocateMemoryUnique(alloc_info);
+		}
+
+	void renderer_3d::copy_buffer(core::manager& manager, const vk::Buffer& src, vk::Buffer dst, size_t size)
+		{
+		const auto& device{ manager.getter(this).device() };
+		const auto& graphics_queue{ manager.getter(this).queues().get_graphics().queue };
+
+		vk::CommandBufferAllocateInfo alloc_info
+			{
+			.commandPool { manager.getter(this).memory_op_command_pool() },
+			.level { vk::CommandBufferLevel::ePrimary },
+			.commandBufferCount { 1 },
+			};
+
+		vk::UniqueCommandBuffer command_buffer{ std::move(device.allocateCommandBuffersUnique(alloc_info)[0]) };
+
+		vk::CommandBufferBeginInfo beginInfo
+			{
+			.flags {vk::CommandBufferUsageFlagBits::eOneTimeSubmit}
+			};
+
+		command_buffer.get().begin(beginInfo);
+
+		vk::BufferCopy copyRegion
+			{
+			.srcOffset{ 0    }, // Optional
+			.dstOffset{ 0    }, // Optional
+			.size     { size }
+			};
+
+		command_buffer.get().copyBuffer(src, dst, copyRegion); //seeplide dovesp elode. cit dige sappiamos 
+		command_buffer.get().end();
+
+		vk::SubmitInfo submitInfo
+			{
+			.commandBufferCount { 1 },
+			.pCommandBuffers { &command_buffer.get() },
+			};
+
+
+		graphics_queue.submit(1, &submitInfo, VK_NULL_HANDLE);
+		graphics_queue.waitIdle();
+		}
+
+	// Record
+	void renderer_3d::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index, float delta_time)
 		{
 		vk::CommandBufferBeginInfo beginInfo; // for now empty is okay (we dont need primary/secondary buffer info or flags)
 		try {
@@ -339,11 +448,41 @@ namespace utils::graphics::vulkan::renderer
 		command_buffer.setViewport(0, vk::Viewport{  .x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f} });
 		command_buffer.setScissor (0, vk::Rect2D  { .offset{0, 0}, .extent{window.width, window.height} });
 
-		vk::Buffer vertex_buffers[] = { vk_unique_buffer.get() };
+		vk::Buffer vertex_buffers[] = { vk_unique_vertex_buffer.get() };
 		vk::DeviceSize offsets[] = { 0 };
 		command_buffer.bindVertexBuffers(0, 1, vertex_buffers, offsets);
+		
+		vk::Buffer index_buffers [] = { vk_unique_index_buffer.get() };
+		command_buffer.bindIndexBuffer(index_buffers[0], 0, vk::IndexType::eUint32);
 
-		command_buffer.draw(vertices_count, 1, 0, 0);
+		glm::mat4 model_transform{ 1.f };
+
+		glm::vec3 cam_pos = { 0.f,0.f,-10.f };
+		glm::mat4 view = glm::translate(glm::mat4(1.f), cam_pos);
+
+		//camera projection
+		glm::mat4 projection = glm::perspective(glm::radians(70.f), static_cast<float>(window.width) / window.height, 0.1f, 200.0f);
+
+		projection[1][1] *= -1; // rotate upwards
+
+		//model rotation
+		static float angle = 0.f;
+		float rot_speed = 30.f;
+		angle += delta_time * rot_speed;
+		//model_transform = glm::scale (model_transform, 0.1f * glm::vec3{ 1 });
+		model_transform = glm::rotate(model_transform, glm::radians(angle), glm::vec3(0, 1, 0));
+		
+
+		//calculate final mesh matrix
+		glm::mat4 mesh_matrix = projection * view * model_transform;
+
+		Mesh_Push_Constants constants;
+		constants.render_matrix = mesh_matrix;
+
+		//upload the matrix to the GPU via push constants
+		command_buffer.pushConstants(vk_unique_pipeline_layout.get(), vk::ShaderStageFlagBits::eVertex, 0, sizeof(Mesh_Push_Constants), &constants);
+
+		command_buffer.drawIndexed(static_cast<uint32_t>(indices_count), 1, 0, 0, 0);
 
 		command_buffer.endRenderPass();
 

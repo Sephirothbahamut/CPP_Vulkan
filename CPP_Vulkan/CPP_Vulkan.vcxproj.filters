@@ -49,6 +49,12 @@
     <Filter Include="Header Files\vulkan\renderer\3d">
       <UniqueIdentifier>{9d0b5ce9-8742-4464-b224-375d5e56c5ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\shaders">
+      <UniqueIdentifier>{c373ca0e-f117-45b4-8d30-812035d9a3c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders\drawmesh">
+      <UniqueIdentifier>{75d3cba6-8c17-4bae-8b3f-0dba6090f3eb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -95,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="vulkan\libraries_implementation.cpp">
       <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\image.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -152,5 +161,16 @@
     <ClInclude Include="vulkan\core\model.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\core\image.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\shaders\drawmesh\shader.frag">
+      <Filter>Resource Files\shaders\drawmesh</Filter>
+    </None>
+    <None Include="data\shaders\drawmesh\shader.vert">
+      <Filter>Resource Files\shaders\drawmesh</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -17,7 +17,7 @@ namespace utils::graphics::vulkan::renderer
 		vk_framebuffers = create_framebuffers(manager, window);
 		}
 
-	void rectangle_renderer::draw(core::manager& manager, const window::window& window)
+	void rectangle_renderer::draw(core::manager& manager, const window::window& window, float delta_time)
 		{
 		if constexpr (utils::compilation::debug)
 			{

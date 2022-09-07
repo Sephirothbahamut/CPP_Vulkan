@@ -15,6 +15,7 @@
 
 namespace utils::graphics::vulkan::window   { class window; class swapchain; class window_sized_images; }
 namespace utils::graphics::vulkan::renderer { class rectangle_renderer; class renderer_3d; }
+namespace utils::graphics::vulkan::core     { class image; }
 
 namespace utils::graphics::vulkan::core
 	{
@@ -47,7 +48,9 @@ namespace utils::graphics::vulkan::core
 			device device;
 			queues queues;
 			flying_frames_pool flying_frames_pool;
+			vk::UniqueCommandPool vk_unique_memory_op_command_pool;
 
+			vk::UniqueCommandPool create_memory_op_command_pool();
 #pragma region getters
 
 		public:
@@ -77,13 +80,14 @@ namespace utils::graphics::vulkan::core
 
 				utils::observer_ptr<const manager> manager_ptr;
 				};
-			class getter_window_sized_images
+			class getter_image
 				{
-				friend class window::window_sized_images;
+				friend class core::image;
 				friend class manager;
 
-				getter_window_sized_images(const manager& manager);
+				getter_image(const manager& manager);
 
+				const vk::PhysicalDevice& physical_device() const noexcept;
 				const vk::Device& device() const noexcept;
 
 				utils::observer_ptr<const manager> manager_ptr;
@@ -140,6 +144,7 @@ namespace utils::graphics::vulkan::core
 				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
 				const core::queues& queues() const noexcept;
 				core::flying_frames_pool& flying_frames_pool() noexcept;
+				vk::CommandPool& memory_op_command_pool() noexcept;
 
 				utils::observer_ptr<manager> manager_ptr;
 				};
@@ -160,7 +165,7 @@ namespace utils::graphics::vulkan::core
 
 			friend class getter_window;
 			friend class getter_swapchain;
-			friend class getter_window_sized_images;
+			friend class getter_image;
 			friend class getter_rectangle_renderer;
 			friend class getter_rectangle_renderer_const;
 			friend class getter_renderer_3d;
@@ -170,7 +175,7 @@ namespace utils::graphics::vulkan::core
 
 			inline getter_window                   getter(const window          ::window*)              const noexcept { return { *this }; }
 			inline getter_swapchain                getter(const window          ::swapchain*)           const noexcept { return { *this }; }
-			inline getter_window_sized_images      getter(const window          ::window_sized_images*) const noexcept { return { *this }; }
+			inline getter_image                    getter(const core            ::image*)               const noexcept { return { *this }; }
 			inline getter_flying_frames_pool       getter(const core            ::flying_frames_pool*)  const noexcept { return { *this }; }
 			inline getter_rectangle_renderer       getter(const vulkan::renderer::rectangle_renderer*)        noexcept { return { *this }; }
 			inline getter_rectangle_renderer_const getter(const vulkan::renderer::rectangle_renderer*)  const noexcept { return { *this }; }
