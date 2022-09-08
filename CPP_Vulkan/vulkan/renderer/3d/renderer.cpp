@@ -17,6 +17,8 @@ namespace utils::graphics::vulkan::renderer
 		vk_unique_renderpass           { create_renderpass(manager) },
 		vk_unique_pipeline_layout      { create_pipeline_layout(manager)},
 		vk_unique_pipeline             { create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
+		vk_depth_image                 { create_depth_image(manager, {800, 600, 1})},
+		vk_depth_image_view            { create_depth_image_view(manager, vk_depth_image.get())},
 
 		vk_unique_staging_vertex_buffer{ create_buffer(manager, model, vk::BufferUsageFlagBits::eTransferSrc, sizeof(model.vertices[0]) * model.vertices.size())},
 		vk_unique_staging_vertex_memory{ create_memory(manager, vk_unique_staging_vertex_buffer.get(), vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) },
@@ -105,39 +107,70 @@ namespace utils::graphics::vulkan::renderer
 
 	vk::UniqueRenderPass renderer_3d::create_renderpass(const core::manager& manager) const
 		{
-		vk::AttachmentDescription color_attachment_description; // attachment specified for color and/or depth buffers
-		color_attachment_description.format = manager.getter(this).swapchain_chosen_details().get_format().format;
-		color_attachment_description.samples = vk::SampleCountFlagBits::e1;
-		color_attachment_description.loadOp = vk::AttachmentLoadOp::eClear;
-		color_attachment_description.storeOp = vk::AttachmentStoreOp::eStore;
-		color_attachment_description.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-		color_attachment_description.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-		color_attachment_description.initialLayout = vk::ImageLayout::eUndefined;
-		color_attachment_description.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+		// color attachment 
+		vk::AttachmentDescription color_attachment_description
+			{
+			.format { manager.getter(this).swapchain_chosen_details().get_format().format },
+			.samples { vk::SampleCountFlagBits::e1 },
+			.loadOp { vk::AttachmentLoadOp::eClear },
+			.storeOp { vk::AttachmentStoreOp::eStore },
+			.stencilLoadOp { vk::AttachmentLoadOp::eDontCare },
+			.stencilStoreOp { vk::AttachmentStoreOp::eDontCare },
+			.initialLayout { vk::ImageLayout::eUndefined },
+			.finalLayout { vk::ImageLayout::ePresentSrcKHR },
+			};
 
-		vk::AttachmentReference color_attachment_ref{};
-		color_attachment_ref.attachment = 0; // Our array consists of a single VkAttachmentDescription, so its index is 0
-		color_attachment_ref.layout = vk::ImageLayout::eColorAttachmentOptimal;
+		// color attachment is index 0
+		vk::AttachmentReference color_attachment_ref
+			{
+			.attachment { 0 },
+			.layout { vk::ImageLayout::eColorAttachmentOptimal },
+			};
 
-		vk::SubpassDescription subpass_description;
-		subpass_description.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-		subpass_description.colorAttachmentCount = 1;
-		subpass_description.pColorAttachments = &color_attachment_ref;
+		// depth attachment
+		vk::AttachmentDescription depth_attachment_description
+			{
+			.format { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment) },
+			.samples { vk::SampleCountFlagBits::e1 },
+			.loadOp { vk::AttachmentLoadOp::eClear },
+			.storeOp { vk::AttachmentStoreOp::eDontCare },
+			.stencilLoadOp { vk::AttachmentLoadOp::eDontCare },
+			.stencilStoreOp { vk::AttachmentStoreOp::eDontCare },
+			.initialLayout { vk::ImageLayout::eUndefined },
+			.finalLayout { vk::ImageLayout::eDepthStencilAttachmentOptimal },
+			};
+
+		// depth attachment is index 1
+		vk::AttachmentReference depth_attachment_ref
+			{
+			.attachment { 1 },
+			.layout { vk::ImageLayout::eDepthStencilAttachmentOptimal },
+			};
+
+		std::array<vk::AttachmentDescription, 2> attachment_descriptions { color_attachment_description, depth_attachment_description };
+
+		vk::SubpassDescription subpass_description
+			{
+			.pipelineBindPoint { vk::PipelineBindPoint::eGraphics },
+			.colorAttachmentCount { 1 },
+			.pColorAttachments { &color_attachment_ref },
+			.pDepthStencilAttachment { &depth_attachment_ref },
+			};
 
 		vk::SubpassDependency dependency
 			{
 				.srcSubpass    { VK_SUBPASS_EXTERNAL },
 				.dstSubpass    { 0 },
-				.srcStageMask  { vk::PipelineStageFlagBits::eColorAttachmentOutput },
-				.dstStageMask  { vk::PipelineStageFlagBits::eColorAttachmentOutput },
+				.srcStageMask  { vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests },
+				.dstStageMask  { vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests },
 				.srcAccessMask { vk::AccessFlagBits::eNone },
-				.dstAccessMask { vk::AccessFlagBits::eColorAttachmentWrite },
+				.dstAccessMask { vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite },
 			};
 
 		vk::RenderPassCreateInfo render_pass_create_info
 			{
-				.attachmentCount{1},
-				.pAttachments{&color_attachment_description},
+				.attachmentCount{static_cast<uint32_t>(attachment_descriptions.size())},
+				.pAttachments{attachment_descriptions.data()},
 				.subpassCount{1},
 				.pSubpasses{&subpass_description},
 				.dependencyCount{1},
@@ -230,7 +263,16 @@ namespace utils::graphics::vulkan::renderer
 		multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
 		multisampling.alphaToOneEnable = VK_FALSE; // Optional
 
-		vk::PipelineDepthStencilStateCreateInfo depth_stencil{}; // TODO if we ever use it
+		vk::PipelineDepthStencilStateCreateInfo depth_stencil{};
+		depth_stencil.depthTestEnable = VK_TRUE;
+		depth_stencil.depthWriteEnable = VK_TRUE;
+		depth_stencil.depthCompareOp = vk::CompareOp::eLess;
+		depth_stencil.depthBoundsTestEnable = VK_FALSE;
+		depth_stencil.minDepthBounds = 0.0f; // Optional
+		depth_stencil.maxDepthBounds = 1.0f; // Optional
+		depth_stencil.stencilTestEnable = VK_FALSE;
+		//depth_stencil.front = {}; // Optional
+		//depth_stencil.back = {}; // Optional
 
 		vk::PipelineColorBlendAttachmentState color_blend_attachment{}; //N.B. this is per-framebuffer
 		color_blend_attachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
@@ -280,7 +322,7 @@ namespace utils::graphics::vulkan::renderer
 			.pViewportState { &viewport_state },
 			.pRasterizationState { &rasterizer },
 			.pMultisampleState { &multisampling },
-			.pDepthStencilState { nullptr }, // Optional
+			.pDepthStencilState { &depth_stencil }, // Optional
 			.pColorBlendState { &color_blending },
 			.pDynamicState { &dynamic_state_info },
 
@@ -305,18 +347,20 @@ namespace utils::graphics::vulkan::renderer
 		return std::move(ret.value);
 		}
 
+
+
 	vk::UniqueFramebuffer renderer_3d::create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const
 		{
 		vk::UniqueFramebuffer ret;
 		try
 			{
-			std::array<vk::ImageView, 1> attachments{ window.get_swapchain().get_image_view(image_index) };
+			std::array<vk::ImageView, 2> attachments{ window.get_swapchain().get_image_view(image_index), vk_depth_image_view.get() };
 			ret =
 				{ manager.getter(this).device().createFramebufferUnique(
 					vk::FramebufferCreateInfo
 					{
 						.renderPass      { vk_unique_renderpass.get() },
-						.attachmentCount { 1 },
+						.attachmentCount { static_cast<uint32_t>(attachments.size()) },
 						.pAttachments    { attachments.data() },
 						.width           { window.width },
 						.height          { window.height },
@@ -426,9 +470,14 @@ namespace utils::graphics::vulkan::renderer
 			}
 
 		//TODO get transparency color from window
-		vk::ClearValue clearColor{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } };
+		//vk::ClearValue clearColor{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } };
+		std::array<vk::ClearValue, 2> clear_values
+			{
+				vk::ClearColorValue{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } },
+				vk::ClearDepthStencilValue{ 1.0f, 0 }
+			};
 
-		vk::RenderPassBeginInfo renderPassInfo
+		vk::RenderPassBeginInfo renderpass_info
 			{
 				.renderPass  {vk_unique_renderpass.get()},
 				.framebuffer {vk_unique_framebuffers[image_index].get()},
@@ -437,11 +486,11 @@ namespace utils::graphics::vulkan::renderer
 					.offset { 0, 0 },
 					.extent { vk::Extent2D{window.width, window.height} },
 				},
-				.clearValueCount {1},
-				.pClearValues {&clearColor},
+				.clearValueCount {static_cast<uint32_t>(clear_values.size())},
+				.pClearValues {clear_values.data()},
 			};
 
-		command_buffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		command_buffer.beginRenderPass(renderpass_info, vk::SubpassContents::eInline);
 
 		command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, vk_unique_pipeline.get());
 

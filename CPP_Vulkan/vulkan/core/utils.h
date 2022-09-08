@@ -44,7 +44,7 @@ namespace utils::graphics::vulkan::core::details
 		return std::nullopt;
 		}
 
-	inline uint32_t find_memory_type(const vk::PhysicalDevice& physical_device, uint32_t type_filter, vk::MemoryPropertyFlags required_properties)
+	inline uint32_t find_memory_type(const vk::PhysicalDevice& physical_device, const uint32_t type_filter, const vk::MemoryPropertyFlags required_properties)
 		{
 		vk::PhysicalDeviceMemoryProperties mem_properties{ physical_device.getMemoryProperties() };
 
@@ -57,6 +57,18 @@ namespace utils::graphics::vulkan::core::details
 			}
 
 		throw std::runtime_error("failed to find suitable memory type!");
+		}
+
+	inline vk::Format find_supported_formats(const vk::PhysicalDevice& physical_device, const std::vector<vk::Format>& candidates, const vk::ImageTiling required_tiling, const vk::FormatFeatureFlags required_features)
+		{
+		for (vk::Format format : candidates) 
+			{
+			vk::FormatProperties props{ physical_device.getFormatProperties(format) };
+			if (required_tiling == vk::ImageTiling::eLinear  && (props.linearTilingFeatures  & required_features) == required_features) { return format; }
+			if (required_tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & required_features) == required_features) { return format; }
+			}
+
+		throw std::runtime_error("failed to find supported format!");
 		}
 
 	struct validation_layers

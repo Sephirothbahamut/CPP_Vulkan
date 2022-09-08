@@ -2,9 +2,12 @@
 
 #include "../../dependencies.h"
 
+#include "../../core/utils.h"
 #include "../../core/shader.h"
 #include "../../core/renderer.h"
 #include "../../core/model.h"
+#include "../../window/window_sized_image.h"
+
 #include <vulkan/vulkan.h>
 
 namespace utils::graphics::vulkan::renderer
@@ -19,11 +22,17 @@ namespace utils::graphics::vulkan::renderer
 			void draw(core::manager& manager, const window::window& window, float delta_time) final override;
 
 		private:
+			using image_handle = window::window_sized_images::container_t::handle_t;
+
 			core::shader_vertex                 vertex_shader            ;
 			core::shader_fragment               fragment_shader          ;
 			vk::UniqueRenderPass                vk_unique_renderpass     ;
 			vk::UniquePipelineLayout            vk_unique_pipeline_layout;
 			vk::UniquePipeline                  vk_unique_pipeline       ;
+			core::image                     vk_depth_image           ;
+			vk::UniqueImageView                 vk_depth_image_view      ;
+			//std::vector<image_handle>           image_handles            ;
+			//std::vector<vk::UniqueImageView>    image_handles_views      ;
 			std::vector<vk::UniqueFramebuffer>  vk_unique_framebuffers   ;
 
 			vk::UniqueBuffer                    vk_unique_staging_vertex_buffer;
@@ -37,12 +46,99 @@ namespace utils::graphics::vulkan::renderer
 			size_t                              vertices_count                 ;
 			size_t                              indices_count                  ;
 
-			vk::UniqueRenderPass create_renderpass  (const core::manager& manager) const;
+			vk::UniqueRenderPass     create_renderpass     (const core::manager& manager) const;
 
 			vk::UniquePipelineLayout create_pipeline_layout(const core::manager& manager) const;
 		
-			vk::UniquePipeline    create_pipeline   (const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const;
+			vk::UniquePipeline       create_pipeline       (const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const;
 		
+			// TODO distruttore di renderer deve distruggere le handle
+			/*image_handle create_image(window::window& window, const core::image::create_info& create_info,
+				const vk::MemoryPropertyFlags required_properties)
+				{
+					return window.images.emplace(create_info, required_properties);
+				}
+
+			std::vector<image_handle> create_images(window::window& window, const core::image::create_info& create_info,
+				const vk::MemoryPropertyFlags required_properties, size_t amount)
+				{
+				std::vector<image_handle> ret;
+				for (size_t i = 0; i < amount; i++)
+					{
+					ret.push_back(create_image(window, create_info, required_properties));
+					}
+				return ret;
+				}
+
+			vk::UniqueImageView create_image_view(const core::manager& manager, const vk::Image& vk_image, vk::Format format, vk::ImageAspectFlags aspect_flags)
+				{
+				return manager.getter(this).device().createImageViewUnique(
+					{
+					.image    { vk_image },
+					.viewType { vk::ImageViewType::e2D },
+					.format   { format },
+					.subresourceRange
+						{
+						.aspectMask     { aspect_flags },
+						.baseMipLevel   { 0 },
+						.levelCount     { 1 },
+						.baseArrayLayer { 0 },
+						.layerCount     { 1 },
+						},
+					});
+				}
+
+			std::vector<vk::UniqueImageView> create_image_views(const core::manager& manager, const vk::Image& vk_image, vk::Format format, vk::ImageAspectFlags aspect_flags, size_t amount)
+				{
+				std::vector<vk::UniqueImageView> ret;
+				for (size_t i = 0; i < amount; i++)
+					{
+					ret.push_back(create_image_view(manager, vk_image, format, aspect_flags));
+					}
+				return ret;
+				}*/
+			
+			core::image create_depth_image(const core::manager& manager, const vk::Extent3D& extent)
+				{
+				return
+					{
+					manager,
+						core::image::create_info
+						{
+						.image_type     { vk::ImageType::e2D },
+						.format         { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment) },
+						.mip_levels     { 1 },
+						.array_layers   { 1 },
+						.samples        { vk::SampleCountFlagBits::e1 },
+						.tiling         { vk::ImageTiling::eOptimal },
+						.usage          { vk::ImageUsageFlagBits::eDepthStencilAttachment},
+						.sharing_mode   { vk::SharingMode::eExclusive },
+						.initial_layout { vk::ImageLayout::eUndefined },
+						},
+					vk::MemoryPropertyFlagBits::eDeviceLocal, 
+					extent
+					};
+				}
+
+			vk::UniqueImageView create_depth_image_view(const core::manager& manager, const vk::Image& vk_image)
+				{
+				return manager.getter(this).device().createImageViewUnique(
+					{
+					.image    { vk_image },
+					.viewType { vk::ImageViewType::e2D },
+					.format   { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment)},
+					.subresourceRange
+						{
+						.aspectMask     { vk::ImageAspectFlagBits::eDepth },
+						.baseMipLevel   { 0 },
+						.levelCount     { 1 },
+						.baseArrayLayer { 0 },
+						.layerCount     { 1 },
+						},
+					});
+				}
+
+
 			vk::UniqueFramebuffer create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const;
 		
 			std::vector<vk::UniqueFramebuffer> create_framebuffers(const core::manager& manager, const window::window& window) const;

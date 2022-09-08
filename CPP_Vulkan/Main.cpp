@@ -42,6 +42,7 @@ int main()
 			vulkan_window::create_info
 				{
 				.title{L"Sample Window Class"},
+				.size{800, 600}
 				},
 			manager,
 			renderer_ptrs
