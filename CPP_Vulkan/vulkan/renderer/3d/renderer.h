@@ -29,8 +29,8 @@ namespace utils::graphics::vulkan::renderer
 			vk::UniqueRenderPass                vk_unique_renderpass     ;
 			vk::UniquePipelineLayout            vk_unique_pipeline_layout;
 			vk::UniquePipeline                  vk_unique_pipeline       ;
-			core::image                     vk_depth_image           ;
-			vk::UniqueImageView                 vk_depth_image_view      ;
+			core::image                         vk_depth_image           ;
+			//vk::UniqueImageView                 vk_depth_image_view      ;
 			//std::vector<image_handle>           image_handles            ;
 			//std::vector<vk::UniqueImageView>    image_handles_views      ;
 			std::vector<vk::UniqueFramebuffer>  vk_unique_framebuffers   ;
@@ -98,46 +98,9 @@ namespace utils::graphics::vulkan::renderer
 				return ret;
 				}*/
 			
-			core::image create_depth_image(const core::manager& manager, const vk::Extent3D& extent)
-				{
-				return
-					{
-					manager,
-						core::image::create_info
-						{
-						.image_type     { vk::ImageType::e2D },
-						.format         { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment) },
-						.mip_levels     { 1 },
-						.array_layers   { 1 },
-						.samples        { vk::SampleCountFlagBits::e1 },
-						.tiling         { vk::ImageTiling::eOptimal },
-						.usage          { vk::ImageUsageFlagBits::eDepthStencilAttachment},
-						.sharing_mode   { vk::SharingMode::eExclusive },
-						.initial_layout { vk::ImageLayout::eUndefined },
-						},
-					vk::MemoryPropertyFlagBits::eDeviceLocal, 
-					extent
-					};
-				}
+			core::image create_depth_image(const core::manager& manager, const vk::Extent3D& extent) const;
 
-			vk::UniqueImageView create_depth_image_view(const core::manager& manager, const vk::Image& vk_image)
-				{
-				return manager.getter(this).device().createImageViewUnique(
-					{
-					.image    { vk_image },
-					.viewType { vk::ImageViewType::e2D },
-					.format   { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment)},
-					.subresourceRange
-						{
-						.aspectMask     { vk::ImageAspectFlagBits::eDepth },
-						.baseMipLevel   { 0 },
-						.levelCount     { 1 },
-						.baseArrayLayer { 0 },
-						.layerCount     { 1 },
-						},
-					});
-				}
-
+			//vk::UniqueImageView create_depth_image_view(const core::manager& manager, const vk::Image& vk_image) const;
 
 			vk::UniqueFramebuffer create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const;
 		

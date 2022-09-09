@@ -47,17 +47,17 @@ int main()
 			manager,
 			renderer_ptrs
 			};
-		auto image = window.images.emplace(
-			{
-			.image_type = vk::ImageType::e2D,
-			.format = vk::Format::eA8B8G8R8UnormPack32,
-			.mip_levels = 1,
-			.array_layers = 1,
-			.samples = vk::SampleCountFlagBits::e1,
-			.tiling = vk::ImageTiling::eOptimal,
-			.usage{vk::ImageUsageFlagBits::eInputAttachment},
-			.initial_layout = vk::ImageLayout::eUndefined,
-			}, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		//auto image = window.images.emplace(
+		//	{
+		//	.image_type = vk::ImageType::e2D,
+		//	.format = vk::Format::eA8B8G8R8UnormPack32,
+		//	.mip_levels = 1,
+		//	.array_layers = 1,
+		//	.samples = vk::SampleCountFlagBits::e1,
+		//	.tiling = vk::ImageTiling::eOptimal,
+		//	.usage{vk::ImageUsageFlagBits::eInputAttachment},
+		//	.initial_layout = vk::ImageLayout::eUndefined,
+		//	}, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
 		auto closer{manager.get_closer()};
 

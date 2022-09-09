@@ -18,7 +18,7 @@ namespace utils::graphics::vulkan::renderer
 		vk_unique_pipeline_layout      { create_pipeline_layout(manager)},
 		vk_unique_pipeline             { create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
 		vk_depth_image                 { create_depth_image(manager, {800, 600, 1})},
-		vk_depth_image_view            { create_depth_image_view(manager, vk_depth_image.get())},
+		//vk_depth_image_view            { create_depth_image_view(manager, vk_depth_image.get())},
 
 		vk_unique_staging_vertex_buffer{ create_buffer(manager, model, vk::BufferUsageFlagBits::eTransferSrc, sizeof(model.vertices[0]) * model.vertices.size())},
 		vk_unique_staging_vertex_memory{ create_memory(manager, vk_unique_staging_vertex_buffer.get(), vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent) },
@@ -347,14 +347,65 @@ namespace utils::graphics::vulkan::renderer
 		return std::move(ret.value);
 		}
 
+		core::image renderer_3d::create_depth_image(const core::manager& manager, const vk::Extent3D& extent) const
+			{
+			return
+				{
+				manager,
+					core::image::create_info
+					{
+					.image_type     { vk::ImageType::e2D },
+					.format         { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment) },
+					.mip_levels     { 1 },
+					.array_layers   { 1 },
+					.samples        { vk::SampleCountFlagBits::e1 },
+					.tiling         { vk::ImageTiling::eOptimal },
+					.usage          { vk::ImageUsageFlagBits::eDepthStencilAttachment},
+					.sharing_mode   { vk::SharingMode::eExclusive },
+					.initial_layout { vk::ImageLayout::eUndefined },
+					},
+					core::image::create_view_info
+					{
+					.view_type { vk::ImageViewType::e2D },
+					.format   { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment)},
+					.subresource_range
+						{
+						.aspectMask     { vk::ImageAspectFlagBits::eDepth },
+						.baseMipLevel   { 0 },
+						.levelCount     { 1 },
+						.baseArrayLayer { 0 },
+						.layerCount     { 1 },
+						},
+					},
+				vk::MemoryPropertyFlagBits::eDeviceLocal,
+				extent
+				};
+			}
 
+		//vk::UniqueImageView renderer_3d::create_depth_image_view(const core::manager& manager, const vk::Image& vk_image) const
+		//	{
+		//	return manager.getter(this).device().createImageViewUnique(
+		//		{
+		//		.image    { vk_image },
+		//		.viewType { vk::ImageViewType::e2D },
+		//		.format   { core::details::find_supported_formats(manager.getter(this).physical_device(), {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment)},
+		//		.subresourceRange
+		//			{
+		//			.aspectMask     { vk::ImageAspectFlagBits::eDepth },
+		//			.baseMipLevel   { 0 },
+		//			.levelCount     { 1 },
+		//			.baseArrayLayer { 0 },
+		//			.layerCount     { 1 },
+		//			},
+		//		});
+		//	}
 
 	vk::UniqueFramebuffer renderer_3d::create_framebuffer(const core::manager& manager, const window::window& window, size_t image_index) const
 		{
 		vk::UniqueFramebuffer ret;
 		try
 			{
-			std::array<vk::ImageView, 2> attachments{ window.get_swapchain().get_image_view(image_index), vk_depth_image_view.get() };
+			std::array<vk::ImageView, 2> attachments{ window.get_swapchain().get_image_view(image_index), vk_depth_image.view() };
 			ret =
 				{ manager.getter(this).device().createFramebufferUnique(
 					vk::FramebufferCreateInfo

@@ -4,16 +4,22 @@
 
 namespace utils::graphics::vulkan::core
 	{
-	image::image(const manager& manager, const image::create_info& create_info, vk::MemoryPropertyFlags required_properties, const vk::Extent3D& extent) :
-		vk_unique_image { create_image   (manager, create_info, extent) },
-		vk_unique_memory{ allocate_memory(manager, required_properties) }
+	image::image(const manager& manager, const create_info& create_info, const create_view_info& create_view_info, vk::MemoryPropertyFlags required_properties, const vk::Extent3D& extent) :
+		vk_unique_image      { create_image   (manager, create_info, extent) },
+		vk_unique_memory     { allocate_memory(manager, required_properties) }
 		{
 		manager.getter(this).device().bindImageMemory(vk_unique_image.get(), vk_unique_memory.get(), 0);
+		vk_unique_image_view = create_image_view(manager, create_view_info);
 		}
 
 	const vk::Image& image::get() const noexcept
 		{
 		return vk_unique_image.get();
+		}
+
+	const vk::ImageView& image::view() const noexcept
+		{
+		return vk_unique_image_view.get();
 		}
 
 	const vk::Image& image::operator*() const noexcept
@@ -64,6 +70,15 @@ namespace utils::graphics::vulkan::core
 		return device.allocateMemoryUnique(allocate_info, nullptr);
 		}
 
-	
+	vk::UniqueImageView image::create_image_view(const manager& manager, const create_view_info& create_view_info) const
+		{
+		return manager.getter(this).device().createImageViewUnique(
+			{
+			.image            { vk_unique_image.get()      },
+			.viewType         { create_view_info.view_type },
+			.format           { create_view_info.format    },
+			.subresourceRange { create_view_info.subresource_range },
+			});
+		}
 	}
 
