@@ -242,7 +242,7 @@ namespace utils::graphics::vulkan::renderer
 			{
 				.location { 0 },
 				.binding  { 0 },
-				.format   { vk::Format::eR32G32B32Sfloat },
+				.format   { vk::Format::eR32G32Sfloat },
 				.offset   { 0 },
 			};
 		vk::PipelineVertexInputStateCreateInfo vertex_input_create_info
