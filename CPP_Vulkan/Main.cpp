@@ -5,20 +5,18 @@
 #include "vulkan/core/shader.h"
 #include "vulkan/window/window.h"
 #include "vulkan/window/window_sized_image.h"
-#include "vulkan/core/renderer.h"
-#include "vulkan/renderer/rectangle/renderer.h"
-#include "vulkan/renderer/3d/renderer.h"
+#include "vulkan/renderer/rectangle/rectangle_renderer.h"
 
 #include "vulkan/core/model.h"
 
 #include <utils_win32/transparent.h>
-class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
+class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>//, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
 	{
 	utils_devirtualize
 	public:
 		//using t<window_implementation_ts...>::t;
-		vulkan_window(base::create_info c_info, utils::graphics::vulkan::core::manager& manager, std::vector<utils::observer_ptr< utils::graphics::vulkan::core::renderer>>& renderer_ptrs) :
-			base{ c_info }, utils::graphics::vulkan::window::window{ manager, renderer_ptrs } {}
+		vulkan_window(base::create_info c_info, utils::graphics::vulkan::core::manager& manager) :
+			base{ c_info }, utils::graphics::vulkan::window::window{ manager } {}
 	};
 
 int main()
@@ -30,11 +28,9 @@ int main()
 
 		//ugv::renderer::rectangle_renderer rect_renderer{manager};
 		//Model model = load_model("data/models/spyro/spyro.obj");
-		Model model = load_model("data/models/bunny.obj");
-		ugv::renderer::renderer_3d renderer_3d{manager, model};
-
-		std::vector<utils::observer_ptr<ugv::core::renderer>> renderer_ptrs{&renderer_3d};
-
+		//Model model = load_model("data/models/bunny.obj");
+	
+		ugv::renderer::rectangle_renderer rectangle_renderer{manager};
 
 		vulkan_window::initializer i;
 		vulkan_window window
@@ -44,25 +40,15 @@ int main()
 				.title{L"Sample Window Class"},
 				.size{800, 600}
 				},
-			manager,
-			renderer_ptrs
+			manager
 			};
-		//auto image = window.images.emplace(
-		//	{
-		//	.image_type = vk::ImageType::e2D,
-		//	.format = vk::Format::eA8B8G8R8UnormPack32,
-		//	.mip_levels = 1,
-		//	.array_layers = 1,
-		//	.samples = vk::SampleCountFlagBits::e1,
-		//	.tiling = vk::ImageTiling::eOptimal,
-		//	.usage{vk::ImageUsageFlagBits::eInputAttachment},
-		//	.initial_layout = vk::ImageLayout::eUndefined,
-		//	}, vk::MemoryPropertyFlagBits::eDeviceLocal);
+	
+		
+		manager.bind(window, rectangle_renderer);
+		window.renderer_ptr = &rectangle_renderer;
+		//window.width = 601;
 
 		auto closer{manager.get_closer()};
-
-		renderer_3d.resize(manager, window);
-
 
 		std::chrono::time_point prev_step_time { std::chrono::high_resolution_clock::now() };
 		std::chrono::time_point curr_step_time { std::chrono::high_resolution_clock::now() };
@@ -80,8 +66,10 @@ int main()
 				}
 			if (window.is_open())
 				{
-				if(window.width & window.height)
-					renderer_3d.draw(manager, window, step_delta_time.count());
+				if (window.width & window.height)
+					{
+					rectangle_renderer.draw(manager, window, step_delta_time.count());
+					}
 				}
 			}
 		}

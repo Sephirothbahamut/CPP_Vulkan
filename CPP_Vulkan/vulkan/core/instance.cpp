@@ -1,6 +1,6 @@
 #include "instance.h"
 
-#include <utils/cout_containers.h>
+#include <utils/output/std_containers.h>
 #include <utils/memory.h>
 
 #include <Windows.h>
@@ -43,7 +43,7 @@ namespace utils::graphics::vulkan::core
 		bool instance_extensions_incomplete{!missing_instance_extensions.empty()};
 		if (validation_layers_incomplete || instance_extensions_incomplete)
 			{
-			using namespace utils::cout;
+			using namespace utils::output;
 			std::stringstream message{"Instance creation failed "};
 			if (validation_layers_incomplete)
 				{

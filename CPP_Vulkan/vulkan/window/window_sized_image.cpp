@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include "window_sized_image.h"
 
 #include "../window/window.h"
@@ -41,4 +41,4 @@ namespace utils::graphics::vulkan::window
 		last_extent = new_extent;
 		}
 
-	};
+	};*/

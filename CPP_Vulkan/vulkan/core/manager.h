@@ -15,13 +15,15 @@
 
 namespace utils::graphics::vulkan::window   { class window; class swapchain; class window_sized_images; }
 namespace utils::graphics::vulkan::renderer { class rectangle_renderer; class renderer_3d; }
-namespace utils::graphics::vulkan::core     { class image; }
+namespace utils::graphics::vulkan::core     { class image; class renderer_window_data; class renderer; }
 
 namespace utils::graphics::vulkan::core
 	{
 	class manager
 		{
 		public:
+			void bind(window::window& window, renderer& renderer);
+
 			class closer_t
 				{
 				friend class manager;
@@ -104,84 +106,66 @@ namespace utils::graphics::vulkan::core
 
 				utils::observer_ptr<const manager> manager_ptr;
 				};
-
-			class getter_rectangle_renderer
+			class getter_renderer
 				{
-				friend class vulkan::renderer::rectangle_renderer;
+				friend class vulkan::core::renderer;
 				friend class manager;
 
-				getter_rectangle_renderer(manager& manager);
-
-				const vk::Device& device() const noexcept;
-				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
-				const core::queues& queues() const noexcept;
-				core::flying_frames_pool& flying_frames_pool() noexcept;
-
-				utils::observer_ptr<manager> manager_ptr;
+				getter_renderer(manager& manager);
+				
+				public:
+					const vk::PhysicalDevice& physical_device() const noexcept;
+					const vk::Device& device() const noexcept;
+					const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
+					const core::queues& queues() const noexcept;
+					core::flying_frames_pool& flying_frames_pool() noexcept;
+					vk::CommandPool& memory_op_command_pool() noexcept;
+				private:
+					utils::observer_ptr<manager> manager_ptr;
 				};
-			class getter_rectangle_renderer_const
+			class getter_renderer_const
 				{
-				friend class vulkan::renderer::rectangle_renderer;
+				friend class vulkan::core::renderer;
 				friend class manager;
 
-				getter_rectangle_renderer_const(const manager& manager);
+				getter_renderer_const(const manager& manager);
+
+				public:
+					const vk::PhysicalDevice& physical_device() const noexcept;
+					const vk::Device& device() const noexcept;
+					const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
+					const core::queues& queues() const noexcept;
+				private:
+					utils::observer_ptr<const manager> manager_ptr;
+				};
+			class getter_renderer_window_data
+				{
+				friend class renderer_window_data;
+				friend class manager;
+
+				getter_renderer_window_data(const manager& manager);
 
 				const vk::Device& device() const noexcept;
-				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
-				const core::queues& queues() const noexcept;
 
 				utils::observer_ptr<const manager> manager_ptr;
 				};
-			class getter_renderer_3d
-				{
-				friend class vulkan::renderer::renderer_3d;
-				friend class manager;
-
-				getter_renderer_3d(manager& manager);
-
-				const vk::PhysicalDevice& physical_device() const noexcept;
-				const vk::Device& device() const noexcept;
-				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
-				const core::queues& queues() const noexcept;
-				core::flying_frames_pool& flying_frames_pool() noexcept;
-				vk::CommandPool& memory_op_command_pool() noexcept;
-
-				utils::observer_ptr<manager> manager_ptr;
-				};
-			class getter_renderer_3d_const
-				{
-				friend class vulkan::renderer::renderer_3d;
-				friend class manager;
-
-				getter_renderer_3d_const(const manager& manager);
-
-				const vk::PhysicalDevice& physical_device() const noexcept;
-				const vk::Device& device() const noexcept;
-				const core::swapchain_chosen_details& swapchain_chosen_details() const noexcept;
-				const core::queues& queues() const noexcept;
-
-				utils::observer_ptr<const manager> manager_ptr;
-				};
-
+			
 			friend class getter_window;
 			friend class getter_swapchain;
 			friend class getter_image;
-			friend class getter_rectangle_renderer;
-			friend class getter_rectangle_renderer_const;
-			friend class getter_renderer_3d;
-			friend class getter_renderer_3d_const;
 			friend class getter_flying_frames_pool;
+			friend class getter_renderer;
+			friend class getter_renderer_const;
+			friend class getter_renderer_window_data;
 #pragma endregion
 
-			inline getter_window                   getter(const window          ::window*)              const noexcept { return { *this }; }
-			inline getter_swapchain                getter(const window          ::swapchain*)           const noexcept { return { *this }; }
-			inline getter_image                    getter(const core            ::image*)               const noexcept { return { *this }; }
-			inline getter_flying_frames_pool       getter(const core            ::flying_frames_pool*)  const noexcept { return { *this }; }
-			inline getter_rectangle_renderer       getter(const vulkan::renderer::rectangle_renderer*)        noexcept { return { *this }; }
-			inline getter_rectangle_renderer_const getter(const vulkan::renderer::rectangle_renderer*)  const noexcept { return { *this }; }
-			inline getter_renderer_3d              getter(const vulkan::renderer::renderer_3d*)               noexcept { return { *this }; }
-			inline getter_renderer_3d_const        getter(const vulkan::renderer::renderer_3d*)         const noexcept { return { *this }; }
-
+			inline getter_window                   getter(const window          ::window*)                const noexcept { return { *this }; }
+			inline getter_swapchain                getter(const window          ::swapchain*)             const noexcept { return { *this }; }
+			inline getter_image                    getter(const core            ::image*)                 const noexcept { return { *this }; }
+			inline getter_flying_frames_pool       getter(const core            ::flying_frames_pool*)    const noexcept { return { *this }; }
+			inline getter_renderer                 getter(      core            ::renderer*)                    noexcept { return { *this }; }
+			inline getter_renderer_const           getter(const core            ::renderer*)              const noexcept { return { *this }; }
+			inline getter_renderer_window_data     getter(const core            ::renderer_window_data*)  const noexcept { return { *this }; }
 			
 		};
 	}

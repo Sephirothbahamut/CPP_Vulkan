@@ -8,6 +8,9 @@
 #include <optional>
 #include <stdexcept>
 
+#include "../window/window.h"
+#include "renderer.h"
+
 namespace utils::graphics::vulkan::core::details
 	{
 	template <typename F, typename required_t, typename available_t>

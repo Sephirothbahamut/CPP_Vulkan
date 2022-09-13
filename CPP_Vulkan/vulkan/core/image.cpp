@@ -4,12 +4,12 @@
 
 namespace utils::graphics::vulkan::core
 	{
-	image::image(const manager& manager, const create_info& create_info, const create_view_info& create_view_info, vk::MemoryPropertyFlags required_properties, const vk::Extent3D& extent) :
-		vk_unique_image      { create_image   (manager, create_info, extent) },
-		vk_unique_memory     { allocate_memory(manager, required_properties) }
+	image::image(const manager& manager, const create_info& create_info, const vk::Extent3D& extent) :
+		vk_unique_image      { create_image   (manager, create_info.image, extent) },
+		vk_unique_memory     { allocate_memory(manager, create_info.memory_properties) }
 		{
 		manager.getter(this).device().bindImageMemory(vk_unique_image.get(), vk_unique_memory.get(), 0);
-		vk_unique_image_view = create_image_view(manager, create_view_info);
+		vk_unique_image_view = create_image_view(manager, create_info.view);
 		}
 
 	const vk::Image& image::get() const noexcept
@@ -32,7 +32,7 @@ namespace utils::graphics::vulkan::core
 		return &vk_unique_image.get();
 		}
 
-	vk::UniqueImage image::create_image(const manager& manager, const create_info& create_info, const vk::Extent3D& extent) const
+	vk::UniqueImage image::create_image(const manager& manager, const create_info::image_t& create_info, const vk::Extent3D& extent) const
 		{
 		return manager.getter(this).device().createImageUnique(
 			vk::ImageCreateInfo
@@ -70,7 +70,7 @@ namespace utils::graphics::vulkan::core
 		return device.allocateMemoryUnique(allocate_info, nullptr);
 		}
 
-	vk::UniqueImageView image::create_image_view(const manager& manager, const create_view_info& create_view_info) const
+	vk::UniqueImageView image::create_image_view(const manager& manager, const create_info::view_t& create_view_info) const
 		{
 		return manager.getter(this).device().createImageViewUnique(
 			{

@@ -37,23 +37,20 @@
     <Filter Include="Source Files\vulkan\renderer">
       <UniqueIdentifier>{acac7f91-e743-4410-aa69-f4b3170a98a7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\vulkan\renderer\rectangle">
-      <UniqueIdentifier>{ddd42507-c127-47da-9744-4a59abddb3ea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\vulkan\renderer\rectangle">
-      <UniqueIdentifier>{94e94757-b875-46e6-9ce6-f30fb56ab12b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\vulkan\renderer\3d">
-      <UniqueIdentifier>{192cab7a-fdcf-4020-b833-804135903b1d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\vulkan\renderer\3d">
-      <UniqueIdentifier>{9d0b5ce9-8742-4464-b224-375d5e56c5ae}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files\shaders">
       <UniqueIdentifier>{c373ca0e-f117-45b4-8d30-812035d9a3c6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files\shaders\drawmesh">
       <UniqueIdentifier>{75d3cba6-8c17-4bae-8b3f-0dba6090f3eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{611fcb54-13ac-4bb0-86c6-046ebe058b88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\vulkan\renderer\rectangle">
+      <UniqueIdentifier>{6e1c2868-4560-4dd5-8c8b-a4640ef908c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vulkan\renderer\rectangle">
+      <UniqueIdentifier>{6a3a3e2e-a613-4fe3-a0b8-8f5d2f81473b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -93,17 +90,20 @@
     <ClCompile Include="vulkan\core\flying_frames_pool.cpp">
       <Filter>Source Files\vulkan\core</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\renderer\rectangle\renderer.cpp">
-      <Filter>Source Files\vulkan\renderer\rectangle</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkan\renderer\3d\renderer.cpp">
-      <Filter>Source Files\vulkan\renderer\3d</Filter>
-    </ClCompile>
     <ClCompile Include="vulkan\libraries_implementation.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\core\image.cpp">
       <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\renderer_window_data.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\core\renderer.cpp">
+      <Filter>Source Files\vulkan\core</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\renderer\rectangle\rectangle_renderer.cpp">
+      <Filter>Source Files\vulkan\renderer\rectangle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -149,20 +149,23 @@
     <ClInclude Include="vulkan\core\flying_frames_pool.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\renderer\rectangle\renderer.h">
-      <Filter>Header Files\vulkan\renderer\rectangle</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\core\renderer.h">
-      <Filter>Header Files\vulkan\core</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan\renderer\3d\renderer.h">
-      <Filter>Header Files\vulkan\renderer\3d</Filter>
-    </ClInclude>
     <ClInclude Include="vulkan\core\model.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\core\image.h">
       <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\memory.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\core\renderer_window_data.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\core\renderer.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderer.h">
+      <Filter>Header Files\vulkan\renderer\rectangle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

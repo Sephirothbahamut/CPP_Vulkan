@@ -7,18 +7,21 @@
 #include "../dependencies.h"
 
 #include "../core/manager.h"
-#include "../core/renderer.h"
+#include "../core/renderer_window_data.h"
+
 #include "surface.h"
 #include "swapchain.h"
-#include "window_sized_image.h"
 
-namespace utils::graphics::vulkan::core { class renderer; }
+
 namespace utils::graphics::vulkan::window
 	{
 	class window : public virtual utils::win32::window::base
 		{
+		friend void core::manager::bind(vulkan::window::window& window, core::renderer& renderer);
 		public:
-			window(core::manager& manager, std::vector<utils::observer_ptr<core::renderer>>& renderer_ptrs);
+			utils::observer_ptr<core::renderer> renderer_ptr = nullptr;
+			window(core::manager& manager);
+			~window();
 
 			std::optional<LRESULT> procedure(UINT msg, WPARAM wparam, LPARAM lparam);
 
@@ -28,12 +31,24 @@ namespace utils::graphics::vulkan::window
 
 			__declspec(property(get = get_extent)) vk::Extent3D extent;
 
-			window_sized_images images;
+			class getter_renderer_window_data
+				{
+				friend class core::renderer_window_data;
+				friend class window;
 
+				getter_renderer_window_data(window& window);
+
+				std::vector<observer_ptr<core::renderer_window_data>>& renderer_dependent_data_ptrs() noexcept;
+
+				utils::observer_ptr<window> window_ptr;
+				};
+
+			friend class getter_renderer_window_data;
+			inline getter_renderer_window_data getter(core::renderer_window_data*) noexcept { return { *this }; }
 		private:
 			utils::observer_ptr<core::manager> manager_ptr;
 			surface surface;
 			swapchain swapchain;
-			std::vector<utils::observer_ptr<core::renderer>> renderer_ptrs;
+			std::vector<observer_ptr<core::renderer_window_data>> renderer_dependent_data_ptrs;
 		};
 	}

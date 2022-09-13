@@ -3,9 +3,10 @@
 #include <optional>
 #include <string>
 
-#include <utils/cout_containers.h>
-
+#include <Windows.h>
 #include <vulkan/vulkan_win32.h>
+
+#include <utils/output/std_containers.h>
 
 #include "utils.h"
 #include "instance.h"
@@ -140,11 +141,12 @@ namespace utils::graphics::vulkan::core
 				auto device_properties{physical_device.getProperties()};
 				std::stringstream message{"Device "};
 				message << device_properties.deviceName << " ";
+				
 				if (queue_families_incomplete) { message << "queue families are incomplete"; }
 				if (queue_families_incomplete && device_extensions_incomplete) { message << ", "; }
 				if (device_extensions_incomplete)
 					{
-					using namespace utils::cout;
+					using namespace utils::output;
 					message << "missing the following device extensions:\n";
 					message << missing_device_extensions;
 					}

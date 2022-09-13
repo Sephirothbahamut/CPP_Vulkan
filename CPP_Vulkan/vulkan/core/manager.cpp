@@ -16,6 +16,14 @@ namespace utils::graphics::vulkan::core
 			flying_frames_pool               { device.get(), queues },
 			vk_unique_memory_op_command_pool { create_memory_op_command_pool() }
 			{}
+		
+		void manager::bind(window::window& window, renderer& renderer)
+			{
+			std::unique_ptr<renderer_window_data> tmp{ new renderer_window_data{*this, renderer, window} };
+
+			renderer.window_dependent_data_ptrs.emplace(&window, tmp.get());
+			window.renderer_dependent_data_ptrs.emplace_back(tmp.release());
+			}
 
 		vk::UniqueCommandPool manager::create_memory_op_command_pool()
 		{
@@ -34,6 +42,7 @@ namespace utils::graphics::vulkan::core
 		}
 
 		// getter_window
+
 		manager::getter_window::getter_window(const manager& manager) : manager_ptr{ &manager } {}
 
 		const vk::Instance& manager::getter_window::instance() const noexcept
@@ -47,6 +56,7 @@ namespace utils::graphics::vulkan::core
 			}
 
 		// getter_swapchain
+
 		manager::getter_swapchain::getter_swapchain(const manager& manager) : manager_ptr{ &manager } {}
 
 		const vk::PhysicalDevice& manager::getter_swapchain::physical_device() const noexcept
@@ -70,6 +80,7 @@ namespace utils::graphics::vulkan::core
 			}
 
 		// getter_image
+
 		manager::getter_image::getter_image(const manager& manager) : manager_ptr{ &manager } {}
 
 		const vk::PhysicalDevice& manager::getter_image::physical_device() const noexcept
@@ -82,48 +93,10 @@ namespace utils::graphics::vulkan::core
 			return manager_ptr->device.get();
 			}
 
-		// getter_rectangle_renderer
-		manager::getter_rectangle_renderer::getter_rectangle_renderer(manager& manager) : manager_ptr{ &manager } {}
+		// getter_flying_frames_pool
 
-		const vk::Device& manager::getter_rectangle_renderer::device() const noexcept
-			{
-			return manager_ptr->device.get();
-			}
+		manager::getter_flying_frames_pool::getter_flying_frames_pool(const manager& manager) : manager_ptr{ &manager } {}
 
-		const swapchain_chosen_details& manager::getter_rectangle_renderer::swapchain_chosen_details() const noexcept
-			{
-			return manager_ptr->swapchain_chosen_details;
-			}
-
-		const queues& manager::getter_rectangle_renderer::queues() const noexcept
-			{
-			return manager_ptr->queues;
-			}
-
-		flying_frames_pool& manager::getter_rectangle_renderer::flying_frames_pool() noexcept
-			{
-			return manager_ptr->flying_frames_pool;
-			}
-
-		// getter_rectangle_renderer_const
-		manager::getter_rectangle_renderer_const::getter_rectangle_renderer_const(const manager& manager) : manager_ptr{ &manager } {}
-
-		const vk::Device& manager::getter_rectangle_renderer_const::device() const noexcept
-			{
-			return manager_ptr->device.get();
-			}
-
-		const swapchain_chosen_details& manager::getter_rectangle_renderer_const::swapchain_chosen_details() const noexcept
-			{
-			return manager_ptr->swapchain_chosen_details;
-			}
-
-		const queues& manager::getter_rectangle_renderer_const::queues() const noexcept
-			{
-			return manager_ptr->queues;
-			}
-
-		// getter_command_buffer_manager
 		const vk::Device& manager::getter_flying_frames_pool::device() const noexcept
 			{
 			return manager_ptr->device.get();
@@ -134,61 +107,67 @@ namespace utils::graphics::vulkan::core
 			return manager_ptr->queues;
 			}
 
+		// getter_renderer
 
-		// getter_renderer_3d
-		manager::getter_renderer_3d::getter_renderer_3d(manager& manager) : manager_ptr{&manager} {}
-		
-		const vk::PhysicalDevice& manager::getter_renderer_3d::physical_device() const noexcept
+		manager::getter_renderer::getter_renderer(manager& manager) : manager_ptr{ &manager } {}
+
+		const vk::PhysicalDevice& manager::getter_renderer::physical_device() const noexcept
 			{
 			return manager_ptr->physical_device;
 			}
 
-		const vk::Device& manager::getter_renderer_3d::device() const noexcept
+		const vk::Device& manager::getter_renderer::device() const noexcept
 			{
 			return manager_ptr->device.get();
 			}
 
-		const swapchain_chosen_details& manager::getter_renderer_3d::swapchain_chosen_details() const noexcept
+		const core::swapchain_chosen_details& manager::getter_renderer::swapchain_chosen_details() const noexcept
 			{
 			return manager_ptr->swapchain_chosen_details;
 			}
 
-		const queues& manager::getter_renderer_3d::queues() const noexcept
+		const core::queues& manager::getter_renderer::queues() const noexcept
 			{
 			return manager_ptr->queues;
 			}
 
-		flying_frames_pool& manager::getter_renderer_3d::flying_frames_pool() noexcept
+		core::flying_frames_pool& manager::getter_renderer::flying_frames_pool() noexcept
 			{
 			return manager_ptr->flying_frames_pool;
 			}
 
-		vk::CommandPool& manager::getter_renderer_3d::memory_op_command_pool() noexcept
+		vk::CommandPool& manager::getter_renderer::memory_op_command_pool() noexcept
 			{
 			return manager_ptr->vk_unique_memory_op_command_pool.get();
 			}
 
-		// getter_renderer_3d_const
-		manager::getter_renderer_3d_const::getter_renderer_3d_const(const manager& manager) : manager_ptr{&manager} {}
+		// getter_renderer_const
 
-		const vk::PhysicalDevice& manager::getter_renderer_3d_const::physical_device() const noexcept
+		manager::getter_renderer_const::getter_renderer_const(const manager& manager) : manager_ptr{ &manager } {}
+
+		const vk::PhysicalDevice& manager::getter_renderer_const::physical_device() const noexcept
 			{
 			return manager_ptr->physical_device;
 			}
-
-		const vk::Device& manager::getter_renderer_3d_const::device() const noexcept
+		const vk::Device& manager::getter_renderer_const::device() const noexcept
 			{
 			return manager_ptr->device.get();
 			}
-
-		const swapchain_chosen_details& manager::getter_renderer_3d_const::swapchain_chosen_details() const noexcept
+		const core::swapchain_chosen_details& manager::getter_renderer_const::swapchain_chosen_details() const noexcept
 			{
 			return manager_ptr->swapchain_chosen_details;
 			}
-
-		const queues& manager::getter_renderer_3d_const::queues() const noexcept
+		const core::queues& manager::getter_renderer_const::queues() const noexcept
 			{
 			return manager_ptr->queues;
 			}
-		
+
+		// getter_renderer_window_data
+
+		manager::getter_renderer_window_data::getter_renderer_window_data(const manager& manager) : manager_ptr{ &manager } {}
+
+		const vk::Device& manager::getter_renderer_window_data::device() const noexcept
+			{
+			return manager_ptr->device.get();
+			}
 }

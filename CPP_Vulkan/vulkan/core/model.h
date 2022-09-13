@@ -3,7 +3,7 @@
 
 #include <utils/math/vec2.h>
 #include <utils/math/vec3.h>
-#include <utils/graphics/color.h>
+#include <utils/graphics/colour.h>
 
 #include <tiny_obj_loader.h>
 
@@ -19,7 +19,7 @@ struct Mesh_Push_Constants
 struct Vertex
 	{
 	utils::math::vec3f position;
-	utils::beta::graphics::colors::rgb<float, 4> color;
+	utils::graphics::colour::rgb<float, 4> color;
 	utils::math::vec3f normal;
 	utils::math::vec2<float> tex_coord;
 

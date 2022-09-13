@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 #include <utils/memory.h>
 #include <utils/containers/handled_container.h>
@@ -43,4 +43,4 @@ namespace utils::graphics::vulkan::window
 
 			void update_images(const vk::Extent3D& extent);
 		};
-	}
+	}*/
