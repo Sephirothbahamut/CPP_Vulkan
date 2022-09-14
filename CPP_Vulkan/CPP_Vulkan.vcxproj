@@ -75,7 +75,7 @@
     <LibraryPath>..\..\..\Libraries\VulkanSDK\1.3.216.0\lib;..\..\..\Libraries\glfw\lib-vc2022;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\..\Libraries\VulkanSDK\1.3.216.0\include;..\..\..\Libraries\CPP_Utilities_Win32\include;..\..\..\Libraries\CPP_Utilities\include;..\..\..\Libraries\magic_enum\include;..\..\..\Libraries\glfw\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\Libraries\VulkanSDK\1.3.216.0\include;..\..\..\Libraries\CPP_Utilities_Win32\include;..\..\..\Libraries\CPP_Utilities\include;..\..\..\Libraries\magic_enum\include;..\..\..\Libraries\glfw\include;..\..\..\Libraries\tinyobjloader\include;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\..\Libraries\VulkanSDK\1.3.216.0\lib;..\..\..\Libraries\glfw\lib-vc2022;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -162,6 +162,8 @@
     <ClCompile Include="vulkan\window\window_sized_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="iige\loop.h" />
+    <ClInclude Include="utils\clock.h" />
     <ClInclude Include="utils\memory.h" />
     <ClInclude Include="vulkan\core\flying_frames_pool.h" />
     <ClInclude Include="vulkan\core\debug_messenger.h" />

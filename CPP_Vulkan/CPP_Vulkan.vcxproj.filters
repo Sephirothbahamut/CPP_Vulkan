@@ -52,6 +52,12 @@
     <Filter Include="Source Files\vulkan\renderer\rectangle">
       <UniqueIdentifier>{6a3a3e2e-a613-4fe3-a0b8-8f5d2f81473b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\iige">
+      <UniqueIdentifier>{71460dcd-0652-4fc6-9f78-ac523abbb55c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\iige">
+      <UniqueIdentifier>{11fc3a9a-291d-4656-84fc-fcb55e535f0d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -166,6 +172,12 @@
     </ClInclude>
     <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderer.h">
       <Filter>Header Files\vulkan\renderer\rectangle</Filter>
+    </ClInclude>
+    <ClInclude Include="iige\loop.h">
+      <Filter>Header Files\iige</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\clock.h">
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
