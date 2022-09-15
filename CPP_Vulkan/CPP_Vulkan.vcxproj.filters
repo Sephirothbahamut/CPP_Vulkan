@@ -58,6 +58,12 @@
     <Filter Include="Source Files\iige">
       <UniqueIdentifier>{11fc3a9a-291d-4656-84fc-fcb55e535f0d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\opengl">
+      <UniqueIdentifier>{65e7c70d-5a44-4506-8f71-b7a6ac531696}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\opengl">
+      <UniqueIdentifier>{607197bf-d9fa-4e19-b921-47ce054dca54}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -110,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="vulkan\renderer\rectangle\rectangle_renderer.cpp">
       <Filter>Source Files\vulkan\renderer\rectangle</Filter>
+    </ClCompile>
+    <ClCompile Include="MainOGL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Libraries\glad\glad.c">
+      <Filter>Source Files\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +190,15 @@
     </ClInclude>
     <ClInclude Include="utils\clock.h">
       <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="opengl\window.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="opengl\rectangle_renderer.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="opengl\shader.h">
+      <Filter>Header Files\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

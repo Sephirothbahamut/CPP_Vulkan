@@ -131,6 +131,9 @@ namespace utils::graphics::vulkan::core
 
 		float evaluate_device(const vk::PhysicalDevice& physical_device, const proxy_surface& proxy_surface)
 			{
+			// enforce nvidia (temporary)
+			//if (physical_device.getProperties().deviceName[0] == 'R') { return 0.f; }
+
 			auto missing_device_extensions{device_extensions::check_missing(physical_device)};
 
 			//TODO actually calculate the scoring fr (thru features / properties )

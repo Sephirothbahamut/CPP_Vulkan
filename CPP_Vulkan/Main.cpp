@@ -24,6 +24,7 @@ class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::wi
 int main()
 	{
 	namespace ugv = utils::graphics::vulkan;
+
 	try
 		{
 		ugv::core::manager manager;
@@ -48,7 +49,6 @@ int main()
 
 		manager.bind(window, rectangle_renderer);
 		window.renderer_ptr = &rectangle_renderer;
-		//window.width = 601;
 
 		auto closer{ manager.get_closer() };
 
@@ -66,28 +66,7 @@ int main()
 				}
 			};
 		loop.run();
-		//std::chrono::time_point prev_step_time { std::chrono::high_resolution_clock::now() };
-		//std::chrono::time_point curr_step_time { std::chrono::high_resolution_clock::now() };
-		//
-		//uint32_t frames_counter{ 0 };
-		//
-		//while (window.is_open())
-		//	{
-		//	prev_step_time = curr_step_time;
-		//	curr_step_time = std::chrono::high_resolution_clock::now();
-		//
-		//	std::chrono::duration<float> step_delta_time{ curr_step_time - prev_step_time };
-		//	while (window.poll_event())
-		//		{
-		//		}
-		//	if (window.is_open())
-		//		{
-		//		if (window.width & window.height)
-		//			{
-		//			rectangle_renderer.draw(manager, window, step_delta_time.count());
-		//			}
-		//		}
-		//	}
+		
 		}
 	catch (const std::exception& e)
 		{

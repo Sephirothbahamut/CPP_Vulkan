@@ -6,9 +6,6 @@
 #include "../../core/model.h"
 #include "../../core/utils.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-
 namespace utils::graphics::vulkan::renderer
 	{
 	rectangle_renderer::rectangle_renderer(core::manager& manager) :
@@ -373,13 +370,8 @@ namespace utils::graphics::vulkan::renderer
 				throw std::runtime_error("failed to begin recording command buffer!");
 				}
 
-			//TODO get transparency color from window
-			//vk::ClearValue clearColor{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } };
-			std::array<vk::ClearValue, 2> clear_values
-				{
-					vk::ClearColorValue{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } },
-					vk::ClearDepthStencilValue{ 1.0f, 0 }
-				};
+			vk::ClearValue clear_color{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } };
+			
 			vk::RenderPassBeginInfo renderpass_info
 				{
 					.renderPass  {vk_unique_renderpass.get()},
@@ -389,8 +381,8 @@ namespace utils::graphics::vulkan::renderer
 						.offset { 0, 0 },
 						.extent { vk::Extent2D{window.width, window.height} },
 					},
-					.clearValueCount {static_cast<uint32_t>(clear_values.size())},
-					.pClearValues {clear_values.data()},
+					.clearValueCount {1},
+					.pClearValues {&clear_color},
 				};
 
 			command_buffer.beginRenderPass(renderpass_info, vk::SubpassContents::eInline);

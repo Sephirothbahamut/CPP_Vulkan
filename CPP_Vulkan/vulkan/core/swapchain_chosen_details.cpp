@@ -36,13 +36,16 @@ namespace utils::graphics::vulkan::core
 		{
 		for (const auto& available_present_mode : available_present_modes)
 			{
-			if (available_present_mode == vk::PresentModeKHR::eMailbox)
+			if (available_present_mode == vk::PresentModeKHR::eMailbox) // only for nvidia, like fifo but with a queue
+				{
+				return available_present_mode;
+				}
+			if (available_present_mode == vk::PresentModeKHR::eImmediate) // uncapped present mode, expect tearing from this
 				{
 				return available_present_mode;
 				}
 			}
-
-		return vk::PresentModeKHR::eFifo; // FIFO mode is guaranteed, at least
+		return vk::PresentModeKHR::eFifo;    // FIFO mode is always guaranteed (ensures V-Sync)
 		}
 
 	uint32_t swapchain_chosen_details::choose_image_count(const vk::SurfaceCapabilitiesKHR& capabilities) noexcept

@@ -72,11 +72,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>..\..\..\Libraries\VulkanSDK\1.3.216.0\include;..\..\..\Libraries\CPP_Utilities_Win32\include;..\..\..\Libraries\CPP_Utilities\include;..\..\..\Libraries\magic_enum\include;..\..\..\Libraries\glfw\include;..\..\..\Libraries\tinyobjloader\include;$(IncludePath)</IncludePath>
-    <LibraryPath>..\..\..\Libraries\VulkanSDK\1.3.216.0\lib;..\..\..\Libraries\glfw\lib-vc2022;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\..\..\Libraries\VulkanSDK\1.3.216.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\..\Libraries\VulkanSDK\1.3.216.0\include;..\..\..\Libraries\CPP_Utilities_Win32\include;..\..\..\Libraries\CPP_Utilities\include;..\..\..\Libraries\magic_enum\include;..\..\..\Libraries\glfw\include;..\..\..\Libraries\tinyobjloader\include;$(IncludePath)</IncludePath>
-    <LibraryPath>..\..\..\Libraries\VulkanSDK\1.3.216.0\lib;..\..\..\Libraries\glfw\lib-vc2022;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\..\..\Libraries\VulkanSDK\1.3.216.0\include;..\..\..\Libraries\CPP_Utilities_Win32\include;..\..\..\Libraries\CPP_Utilities\include;..\..\..\Libraries\magic_enum\include;..\..\..\Libraries\glfw\include;..\..\..\Libraries\tinyobjloader\include;..\..\..\Libraries\glad;..\..\..\Libraries\glew\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\..\Libraries\VulkanSDK\1.3.216.0\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -119,7 +119,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shaderc_combinedd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,11 +139,13 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shaderc_combinedd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combinedd.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Libraries\glad\glad.c" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MainOGL.cpp" />
     <ClCompile Include="vulkan\core\flying_frames_pool.cpp" />
     <ClCompile Include="vulkan\core\debug_messenger.cpp" />
     <ClCompile Include="vulkan\core\image.cpp" />
@@ -163,6 +165,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="iige\loop.h" />
+    <ClInclude Include="opengl\rectangle_renderer.h" />
+    <ClInclude Include="opengl\shader.h" />
+    <ClInclude Include="opengl\window.h" />
     <ClInclude Include="utils\clock.h" />
     <ClInclude Include="utils\memory.h" />
     <ClInclude Include="vulkan\core\flying_frames_pool.h" />
