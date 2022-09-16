@@ -95,5 +95,5 @@ namespace utils::graphics::vulkan::core
 	{
 	struct error : std::runtime_error { using std::runtime_error::runtime_error; };
 
-	inline static utils::logger<utils::message> logger{"../logs/vulkan_log.txt"};
+	inline utils::logger<utils::message> logger{"../logs/vulkan_log.txt"};
 	}

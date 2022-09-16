@@ -200,6 +200,18 @@
     <ClInclude Include="opengl\shader.h">
       <Filter>Header Files\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="utils\remappable_handled_container.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\producer_consumer_queue.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\self_consuming_queue.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="iige\resources_manager.h">
+      <Filter>Header Files\iige</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\drawmesh\shader.frag">
