@@ -101,8 +101,14 @@ namespace iige::resources
 				std::unique_lock lock{ handled_container_mutex };
 				return handled_container[handle];
 				}
-		
-			void consume(std::vector<std::pair<typename handled_container_t::handle_t, const std::filesystem::path>>& to_load)
+
+			std::mutex handled_container_mutex;
+			handled_container_t handled_container;
+			std::unordered_map<std::string, typename handled_container_t::handle_t> map;
+
+			using queue_value_type = std::pair<typename handled_container_t::handle_t, const std::filesystem::path>;
+			utils::multithread::self_consuming_queue<queue_value_type> loading_queue{
+				[this](std::vector<std::pair<typename handled_container_t::handle_t, const std::filesystem::path>>& to_load) -> void
 				{
 				for (const auto& element : to_load)
 					{
@@ -115,16 +121,9 @@ namespace iige::resources
 						auto loaded_resource_handle{ handled_container.emplace(std::move(asset)) };
 						handled_container.remap(element.first, loaded_resource_handle);
 						}
-					catch (const std::exception&) {  }//TODO log
+					catch (const std::exception&) { utils::globals::logger.err("Failed to retrieve resource at path \"" + element + "\"!") }
 					}
-				}
-
-			std::mutex handled_container_mutex;
-			handled_container_t handled_container;
-			std::unordered_map<std::string, typename handled_container_t::handle_t> map;
-
-			using queue_value_type = std::pair<typename handled_container_t::handle_t, const std::filesystem::path>;
-			utils::multithread::self_consuming_queue<queue_value_type> loading_queue{ std::bind(&resource_manager<T>::consume, this) };
+				} };
 		};
 
 

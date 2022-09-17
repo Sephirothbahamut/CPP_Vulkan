@@ -14,8 +14,7 @@ namespace utils::multithread
 	class self_consuming_queue : public producer_consumer_queue<T>
 		{
 		public:
-
-			self_consuming_queue(std::function<void(std::vector<T>&)> consume) : consume{ consume }, thread{ &consumer, this } {}
+			self_consuming_queue(std::function<void(std::vector<T>&)> consume) : consume{ consume }, thread{ &self_consuming_queue::consumer, this } {}
 			using base_t = producer_consumer_queue<T>;
 
 			~self_consuming_queue()
@@ -45,12 +44,11 @@ namespace utils::multithread
 
 			void consumer() noexcept
 				{
-				std::cout << "I STARTED, LOOK AT ME!!!!!!" << std::endl;
 				while (running)
 					{
 					if (true)
 						{
-						std::unique_lock lock{ base_t::mutex };
+						std::unique_lock lock{ base_t::queues_access_mutex };
 						if (base_t::producer_data.empty()) { work_available.wait(lock); }
 
 						base_t::consumer_data.swap(base_t::producer_data);

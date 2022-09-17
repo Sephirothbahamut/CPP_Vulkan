@@ -21,25 +21,25 @@ namespace utils::multithread
 			template <typename ...Args>
 			void emplace(Args&&... args) 
 				{
-				std::unique_lock<std::mutex> lock{ mutex };
+				std::unique_lock lock{ queues_access_mutex };	
 				producer_data.emplace_back(std::forward<Args>(args)...);
 				}
 
 			void push(const T& element)
 				{
-				std::unique_lock lock{ mutex };
+				std::unique_lock lock{ queues_access_mutex };
 				producer_data.push_back(element);
 				}
 
 			std::vector<T>& swap_and_get()
 				{
-				std::unique_lock lock{ mutex };
+				std::unique_lock lock{ queues_access_mutex };
 				std::swap(producer_data, consumer_data);
 				return consumer_data;
 				}
 
 		protected:
-			std::mutex mutex;
+			std::mutex queues_access_mutex;
 			std::vector<T> producer_data;
 			std::vector<T> consumer_data;
 		};

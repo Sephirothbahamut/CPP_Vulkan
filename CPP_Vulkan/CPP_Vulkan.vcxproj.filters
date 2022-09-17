@@ -123,6 +123,9 @@
     <ClCompile Include="..\..\..\Libraries\glad\glad.c">
       <Filter>Source Files\opengl</Filter>
     </ClCompile>
+    <ClCompile Include="quick_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vulkan\core\instance.h">
