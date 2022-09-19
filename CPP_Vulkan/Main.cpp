@@ -26,7 +26,12 @@ class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::wi
 
 struct thing_t
 	{
-	thing_t(const std::filesystem::path& fname) { throw std::runtime_error{"trolololol"}; }
+	struct create_info {};
+	thing_t(const create_info& fname) 
+		{
+		throw std::runtime_error{"trolololol"}; 
+		}
+	
 	};
 
 
@@ -34,8 +39,10 @@ struct thing_t
 int main()
 	{
 	namespace ugv = utils::graphics::vulkan;
-	iige::resources::manager<thing_t> rm;
-	rm.load_async<thing_t>("hello");
+	iige::resource::manager<thing_t, thing_t::create_info> rm;
+	rm.load_async("hello");
+
+
 
 	try
 		{

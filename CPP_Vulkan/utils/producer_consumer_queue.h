@@ -21,7 +21,7 @@ namespace utils::multithread
 			template <typename ...Args>
 			void emplace(Args&&... args) 
 				{
-				std::unique_lock lock{ queues_access_mutex };	
+				std::unique_lock lock{ queues_access_mutex };
 				producer_data.emplace_back(std::forward<Args>(args)...);
 				}
 

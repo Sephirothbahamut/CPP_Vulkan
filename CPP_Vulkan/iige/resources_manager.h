@@ -5,20 +5,23 @@
 #include <concepts>
 #include <filesystem>
 #include <unordered_map>
+
 #include <utils/containers/multitype_container.h>
+#include <utils/construct.h>
+
 #include "../utils/remappable_handled_container.h"
 #include "../utils/self_consuming_queue.h"
 
-namespace iige::resources
+namespace iige::resource
 	{
+	template <typename T, typename ...Args>
+		requires std::constructible_from<T, Args...>
+	class manager;
 
-	template <typename T>
-	class inner_manager;
-
-	template <typename T>
+	template <typename T, typename ...Args>
 	class handle
 		{
-		friend class inner_manager<T>;
+		friend class manager<T, Args...>;
 		using handled_container_t = utils::containers::remappable_handled_container<T>;
 
 		public:
@@ -28,28 +31,37 @@ namespace iige::resources
 			using pointer         =       value_type*;
 			using const_pointer   = const value_type* const;
 				
-				  reference operator* ()       noexcept;
+			      reference operator* ()       noexcept;
 			const_reference operator* () const noexcept;
 
-				  pointer   operator->()       noexcept;
+			      pointer   operator->()       noexcept;
 			const_pointer   operator->() const noexcept;
 
-				  reference value     ()       noexcept;
+			      reference value     ()       noexcept;
 			const_reference value     () const noexcept;
 
-				  pointer   get       ()       noexcept;
+			      pointer   get       ()       noexcept;
 			const_pointer   get       () const noexcept;
 
 		private:
-			handle(inner_manager<T>& resman, handled_container_t::handle_t inner_handle) : resman{ resman }, inner_handle{ inner_handle } {}
+			handle(manager<T, Args...>& resman, handled_container_t::handle_t inner_handle) : resman{ resman }, inner_handle{ inner_handle } {}
 
-			inner_manager<T>& resman;
+			manager<T, Args...>& resman;
 			handled_container_t::handle_t inner_handle;
 		};
 
-	template <typename T>
-	class inner_manager // manages only one type of resource at a time
+
+
+	template <typename T, typename ...Args>
+		requires std::constructible_from<T, Args...>
+	class manager // manages only one type of resource at a time
 		{
+		enum class construction_type_t { single_parameter, tuple };
+		inline static constexpr construction_type_t construction_type = sizeof...(Args) > 1 ? construction_type_t::tuple : construction_type_t::single_parameter;
+
+		using create_info_t = std::conditional_t<construction_type == construction_type_t::tuple, std::tuple<Args...>, std::tuple_element_t<0, std::tuple<Args...>> >;
+
+
 		public:
 			using handled_container_t = utils::containers::remappable_handled_container<T>;
 
@@ -60,35 +72,74 @@ namespace iige::resources
 			using pointer         = handled_container_t::pointer;
 			using const_pointer   = handled_container_t::const_pointer;
 
-			friend class handle_t;
+			using handle_t = handle<T, Args...>;
 
-			handle<T> load_sync(const std::filesystem::path& path)
+
+			handle_t load_sync(std::string name, Args&& ...args)
 				{
-				auto pathstring{ path.string() };
-				auto it{ map.find(pathstring) };
-				if (it != map.end()) { return { *this, it->second }; }
+				auto cinfo_it{ map_create_infos.find(name) };
+				if (cinfo_it != map_create_infos.end())
+					{
+					throw std::runtime_error{ "Resource \"" + name + "\" already had create infos." };
+					}
+
+				map_create_infos[name] = { std::forward<Args>(args)... };
+
+				return load_sync(name);
+				}
+
+			handle_t load_async(std::string name, Args&& ...args)
+				{
+				auto cinfo_it{ map_create_infos.find(name) };
+				if (cinfo_it != map_create_infos.end())
+					{
+					throw std::runtime_error{ "Resource \"" + name + "\" already had create infos." };
+					}
+
+				map_create_infos[name] = { std::forward<Args>(args)... };
+
+				return load_async(name);
+				}
+
+			handle_t load_sync(std::string name)
+				{
+				auto cinfo_it{ map_create_infos.find(name) };
+				if (cinfo_it == map_create_infos.end())
+					{
+					throw std::runtime_error{"Could not find create info for resource \"" + name + "\"."};
+					}
+
+				auto eleme_it{ map.find(name) };
+				if (eleme_it != map.end()) { return { *this, eleme_it->second }; }
 
 				std::unique_lock lock{ handled_container_mutex };
-				auto handle{ handled_container.emplace(pathstring) };
-				map[pathstring] = handle;
+				auto handle{ handled_container.emplace(cinfo_it->second) };
+				map[name] = handle;
 
 				return { *this, handle };
 				}
 
-			handle<T> load_async(const std::filesystem::path& path)
+			handle_t load_async(std::string name)
 				{
-				auto pathstring{ path.string() };
-				auto it{ map.find(pathstring) };
-				if (it != map.end()) { return { *this, it->second }; }
+				auto eleme_it{ map.find(name) };
+				if (eleme_it != map.end()) { return { *this, eleme_it->second }; }
+
+				auto cinfo_it{ map_create_infos.find(name) };
+				if (cinfo_it == map_create_infos.end())
+					{
+					throw std::runtime_error{ "Could not find create info for resource \"" + name + "\"." };
+					}
 
 				std::unique_lock lock{ handled_container_mutex };
 				auto handle{ handled_container.undergo_mythosis(0) };
-				map[pathstring] = handle;
+				map[name] = handle;
 
-				loading_queue.emplace(handle, pathstring);
+				loading_queue.emplace(name, handle, cinfo_it->second);
 
 				return { *this, handle };
 				}
+
+			std::unordered_map<std::string, create_info_t> map_create_infos;
 
 		private:
 			const T& get(handled_container_t::handle_t handle) const noexcept
@@ -106,65 +157,116 @@ namespace iige::resources
 			handled_container_t handled_container;
 			std::unordered_map<std::string, typename handled_container_t::handle_t> map;
 
-			using queue_value_type = std::pair<typename handled_container_t::handle_t, const std::filesystem::path>;
-			utils::multithread::self_consuming_queue<queue_value_type> loading_queue{
-				[this](std::vector<std::pair<typename handled_container_t::handle_t, const std::filesystem::path>>& to_load) -> void
+			struct queue_value_type
 				{
-				for (const auto& element : to_load)
+				std::string name;
+				typename handled_container_t::handle_t handle;
+				create_info_t create_info;
+				};
+
+			utils::multithread::self_consuming_queue<queue_value_type> loading_queue
+				{
+				[this](std::vector<queue_value_type>& to_load) -> void
 					{
-					try
+					using namespace std::string_literals;
+					for (const auto& element : to_load)
 						{
-						T asset{ element.second };
+						try
+							{
+							auto store{ [&](T&& asset) -> void
+								{
+								std::unique_lock lock{ handled_container_mutex };
 
-						std::unique_lock lock{ handled_container_mutex };
+								auto loaded_resource_handle{ handled_container.emplace(std::move(asset)) };
+								handled_container.remap(element.handle, loaded_resource_handle);
+								} };
 
-						auto loaded_resource_handle{ handled_container.emplace(std::move(asset)) };
-						handled_container.remap(element.first, loaded_resource_handle);
+							if constexpr(construction_type == construction_type_t::single_parameter)
+								{
+								store({ element.create_info });
+								}
+							else if constexpr (construction_type == construction_type_t::tuple)
+								{
+								store(utils::construct::from_tuple<T>(element.create_info));
+								}
+							}
+						catch (const std::exception&) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!"); }
 						}
-					catch (const std::exception&) { utils::globals::logger.err("Failed to retrieve resource at path \"" + element + "\"!") }
-					}
-				} };
+					} 
+				};
 		};
+	template <typename T, typename ...Args> handle<T, Args...>::      reference handle<T, Args...>::operator* ()       noexcept { return                resman.get(inner_handle) ; }
+	template <typename T, typename ...Args> handle<T, Args...>::const_reference handle<T, Args...>::operator* () const noexcept { return                resman.get(inner_handle) ; }
 
+	template <typename T, typename ...Args> handle<T, Args...>::      pointer   handle<T, Args...>::operator->()       noexcept { return std::addressof(resman.get(inner_handle)); }
+	template <typename T, typename ...Args> handle<T, Args...>::const_pointer   handle<T, Args...>::operator->() const noexcept { return std::addressof(resman.get(inner_handle)); }
 
-	template <typename T> handle<T>::      reference handle<T>::operator* ()       noexcept { return                resman.get(handle) ; }
-	template <typename T> handle<T>::const_reference handle<T>::operator* () const noexcept { return                resman.get(handle) ; }
+	template <typename T, typename ...Args> handle<T, Args...>::      reference handle<T, Args...>::value     ()       noexcept { return                resman.get(inner_handle) ; }
+	template <typename T, typename ...Args> handle<T, Args...>::const_reference handle<T, Args...>::value     () const noexcept { return                resman.get(inner_handle) ; }
 
-	template <typename T> handle<T>::      pointer   handle<T>::operator->()       noexcept { return std::addressof(resman.get(handle)); }
-	template <typename T> handle<T>::const_pointer   handle<T>::operator->() const noexcept { return std::addressof(resman.get(handle)); }
+	template <typename T, typename ...Args> handle<T, Args...>::      pointer   handle<T, Args...>::get       ()       noexcept { return std::addressof(resman.get(inner_handle)); }
+	template <typename T, typename ...Args> handle<T, Args...>::const_pointer   handle<T, Args...>::get       () const noexcept { return std::addressof(resman.get(inner_handle)); }
 
-	template <typename T> handle<T>::      reference handle<T>::value     ()       noexcept { return                resman.get(handle) ; }
-	template <typename T> handle<T>::const_reference handle<T>::value     () const noexcept { return                resman.get(handle) ; }
-
-	template <typename T> handle<T>::      pointer   handle<T>::get       ()       noexcept { return std::addressof(resman.get(handle)); }
-	template <typename T> handle<T>::const_pointer   handle<T>::get       () const noexcept { return std::addressof(resman.get(handle)); }
-
-	template<std::constructible_from<std::filesystem::path> ...Ts>
-	class manager // manages resource_managers
+	namespace concepts
+		{
+		template<typename T>
+		concept manager = std::same_as<T, iige::resource::manager<typename T::create_info_t>>;
+		}
+	}
+namespace iige
+	{
+	template<resource::concepts::manager ...managers_Ts>
+	class resources_manager // manages resource_managers
 		{
 		public:
-			template <typename T>
-			using container_t = inner_manager<T>;
-		
-			template <typename T>
-			handle<T> load_sync(const std::filesystem::path& path)
+			template <typename T, typename ...Args>
+			resource::handle<T, Args...> load_sync(std::string name, Args&&... args)
 				{
-				auto& container{ resource_managers_container.get_containing_type<T>() };
+				auto& container{ get_containing_type<T>() };
 
-				return container.load_sync(path);
+				return container.load_sync(name, args);
+				}
+
+			template <typename T, typename ...Args>
+			resource::handle<T, Args...> load_async(std::string name, Args&&... args)
+				{
+				auto& container{ get_containing_type<T>() };
+
+				return container.load_async(name, args);
+
 				}
 
 			template <typename T>
-			handle<T> load_async(const std::filesystem::path& path)
+			auto load_sync(std::string name) -> typename decltype(get_containing_type<T>())::handle_t
 				{
-				auto& container{ resource_managers_container.get_containing_type<T>() };
+				auto& container{ get_containing_type<T>() };
 
-				return container.load_async(path);
-
+				return container.load_sync(name);
 				}
 
+			template <typename T>
+			auto load_async(std::string name) -> typename decltype(get_containing_type<T>())::handle_t
+				{
+				auto& container{ get_containing_type<T>() };
+
+				return container.load_async(name);
+				}
 
 		private:
-			utils::containers::multitype_container<inner_manager, Ts...> resource_managers_container;//if this stays, mythosis stays as well
+			using tuple_t = std::tuple<managers_Ts...>;
+			tuple_t managers;
+
+			template <typename type>
+			constexpr auto& get_containing_type()
+				{
+				return std::get<get_index_containing_type<type>()>(managers);
+				}
+
+			template<typename T, std::size_t index = 0>
+			static constexpr std::size_t get_index_containing_type()
+				{
+				if constexpr (std::same_as<T, typename std::tuple_element<index, tuple_t>::type::value_type>) { return index; }
+				else { return get_index_containing_type<T, index + 1>(); }
+				}
 		};
 	}
