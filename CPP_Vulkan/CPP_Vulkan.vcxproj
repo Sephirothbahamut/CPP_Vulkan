@@ -174,9 +174,7 @@
     <ClInclude Include="opengl\window.h" />
     <ClInclude Include="utils\clock.h" />
     <ClInclude Include="utils\memory.h" />
-    <ClInclude Include="utils\producer_consumer_queue.h" />
     <ClInclude Include="utils\remappable_handled_container.h" />
-    <ClInclude Include="utils\self_consuming_queue.h" />
     <ClInclude Include="vulkan\core\flying_frames_pool.h" />
     <ClInclude Include="vulkan\core\debug_messenger.h" />
     <ClInclude Include="vulkan\core\image.h" />

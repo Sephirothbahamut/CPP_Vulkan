@@ -12,9 +12,8 @@
 
 #include <utils/containers/multihandled_default.h>
 #include <utils/construct.h>
+#include <utils/containers/self_consuming_queue.h>
 #include <utils/logger.h>
-
-#include "../utils/self_consuming_queue.h"
 
 namespace iige::resource
 	{
@@ -270,7 +269,7 @@ namespace iige::resource
 				factory_t factory;
 				};
 
-			utils::multithread::self_consuming_queue<loading_queue_value_type> loading_queue
+			utils::containers::self_consuming_queue<loading_queue_value_type> loading_queue
 				{
 				[this](std::vector<loading_queue_value_type>& to_load) -> void
 					{
@@ -297,7 +296,7 @@ namespace iige::resource
 
 			unload_callback_t unload_callback;
 
-			utils::multithread::self_consuming_queue<unloading_queue_value_type> unloading_queue
+			utils::containers::self_consuming_queue<unloading_queue_value_type> unloading_queue
 				{
 				[this](std::vector<unloading_queue_value_type>& to_load) -> void
 					{

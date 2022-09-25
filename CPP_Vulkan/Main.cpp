@@ -1,6 +1,7 @@
 #include <chrono>
 
 #include <utils_win32/transparent.h>
+#include <utils/logger.h>
 
 #include "vulkan/core/utils.h"
 #include "vulkan/core/manager.h"
@@ -14,7 +15,7 @@
 #include "iige/loop.h"
 #include "iige/resources_manager_sync.h"
 #include "iige/resources_manager_async.h"
-#include "utils/self_consuming_queue.h"
+
 
 class vulkan_window : public utils::win32::window::t<utils::graphics::vulkan::window::window>//, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
 	{
@@ -65,37 +66,38 @@ int main()
 	auto asy{ rm_thong.load_async("asy", []() {return thong_t{1, "asy"}; }) };
 	
 	utils::globals::logger.log("Printing default");
-	utils::globals::logger.log("def: " + std::to_string(def->a) + ", "s + def->f + "\n"s);
-	utils::globals::logger.log("dez: " + std::to_string(dez->a) + ", "s + dez->f + "\n"s);
-	utils::globals::logger.log("dex: " + std::to_string(dex->a) + ", "s + dex->f + "\n"s);
-	utils::globals::logger.log("scd: " + std::to_string(scd->a) + ", "s + scd->f + "\n"s);
-	utils::globals::logger.log("qwe: " + std::to_string(qwe->a) + ", "s + qwe->f + "\n"s);
-	utils::globals::logger.log("asy: " + std::to_string(asy->a) + ", "s + asy->f + "\n"s);
+	utils::globals::logger.log("def: " + std::to_string(def->a) + ", "s + def->f);
+	utils::globals::logger.log("dez: " + std::to_string(dez->a) + ", "s + dez->f);
+	utils::globals::logger.log("dex: " + std::to_string(dex->a) + ", "s + dex->f);
+	utils::globals::logger.log("scd: " + std::to_string(scd->a) + ", "s + scd->f);
+	utils::globals::logger.log("qwe: " + std::to_string(qwe->a) + ", "s + qwe->f);
+	utils::globals::logger.log("asy: " + std::to_string(asy->a) + ", "s + asy->f);
 	
 	utils::globals::logger.log("Remapping def to dez");
 	def.remap(dez);
-	utils::globals::logger.log("def 2: " + std::to_string(def->a) + ", "s + def->f + "\n"s);
+	utils::globals::logger.log("def 2: " + std::to_string(def->a) + ", "s + def->f);
 	
 	utils::globals::logger.log("Unloading pippo");
 	rm_thong.unload_sync("pippo");
 
-	utils::globals::logger.log("dex u: " + std::to_string(dex->a) + ", "s + dex->f + "\n"s);
+	utils::globals::logger.log("dex u: " + std::to_string(dex->a) + ", "s + dex->f );
 	
 	utils::globals::logger.log("Reloading pippo");
 	rm_thong.load_sync("pippo");
 	
-	utils::globals::logger.log("dex r: " + std::to_string(dex->a) + ", "s + dex->f + "\n"s);
-	utils::globals::logger.log("dez r: " + std::to_string(dez->a) + ", "s + dez->f + "\n"s);
+	utils::globals::logger.log("dex r: " + std::to_string(dex->a) + ", "s + dex->f );
+	utils::globals::logger.log("dez r: " + std::to_string(dez->a) + ", "s + dez->f);
 
-	utils::globals::logger.log("Printing async");
+	utils::globals::logger.log("Printing async\nprova\nprova");
+	utils::globals::logger.flush();
 	while(true)
 		{
 		using namespace std::literals::chrono_literals;
 		std::this_thread::sleep_for(.1s);
-		utils::globals::logger.log(std::to_string(asy->a) + ", "s + asy->f + "\n"s);
+		utils::globals::logger.log(std::to_string(asy->a) + ", "s + asy->f );
 		}
 	
-	//utils::globals::logger.flush(); TODO
+	
 	try
 		{
 		ugv::core::manager manager;
