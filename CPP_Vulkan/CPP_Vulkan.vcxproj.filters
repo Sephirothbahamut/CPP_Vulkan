@@ -215,6 +215,12 @@
     <ClInclude Include="iige\resources_manager.h">
       <Filter>Header Files\iige</Filter>
     </ClInclude>
+    <ClInclude Include="iige\resources_manager_sync.h">
+      <Filter>Header Files\iige</Filter>
+    </ClInclude>
+    <ClInclude Include="iige\resources_manager_async.h">
+      <Filter>Header Files\iige</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\drawmesh\shader.frag">

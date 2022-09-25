@@ -47,7 +47,9 @@ namespace utils::graphics::vulkan::core
 			utils_if_debug(debug_messenger debug_messenger);
 			swapchain_chosen_details swapchain_chosen_details;
 			physical_device physical_device;
+		public://TODO turn private again
 			device device;
+		private:
 			queues queues;
 			flying_frames_pool flying_frames_pool;
 			vk::UniqueCommandPool vk_unique_memory_op_command_pool;

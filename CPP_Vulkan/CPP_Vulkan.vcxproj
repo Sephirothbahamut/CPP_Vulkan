@@ -167,6 +167,8 @@
   <ItemGroup>
     <ClInclude Include="iige\loop.h" />
     <ClInclude Include="iige\resources_manager.h" />
+    <ClInclude Include="iige\resources_manager_async.h" />
+    <ClInclude Include="iige\resources_manager_sync.h" />
     <ClInclude Include="opengl\rectangle_renderer.h" />
     <ClInclude Include="opengl\shader.h" />
     <ClInclude Include="opengl\window.h" />

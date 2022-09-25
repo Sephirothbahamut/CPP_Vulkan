@@ -51,6 +51,7 @@ namespace utils::multithread
 						std::unique_lock lock{ base_t::queues_access_mutex };
 						if (base_t::producer_data.empty()) { work_available.wait(lock); }
 
+						base_t::consumer_data.clear();
 						base_t::consumer_data.swap(base_t::producer_data);
 						}
 

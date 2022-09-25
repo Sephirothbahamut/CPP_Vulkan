@@ -6,10 +6,9 @@
 #include <filesystem>
 #include <unordered_map>
 
-#include <utils/containers/multitype_container.h>
+#include <utils/containers/multihandled_default.h>
 #include <utils/construct.h>
 
-#include "../utils/remappable_handled_container.h"
 #include "../utils/self_consuming_queue.h"
 
 namespace iige::resource
@@ -22,7 +21,7 @@ namespace iige::resource
 	class handle
 		{
 		friend class manager<T, Args...>;
-		using handled_container_t = utils::containers::remappable_handled_container<T>;
+		using handled_container_t = utils::containers::multihandled_default<T>;
 
 		public:
 			using value_type      = T;
@@ -51,19 +50,17 @@ namespace iige::resource
 		};
 
 
-
+	// TODO add size to template
 	template <typename T, typename ...Args>
 		requires std::constructible_from<T, Args...>
 	class manager // manages only one type of resource at a time
 		{
-		enum class construction_type_t { single_parameter, tuple };
-		inline static constexpr construction_type_t construction_type = sizeof...(Args) > 1 ? construction_type_t::tuple : construction_type_t::single_parameter;
+		using create_info_t = std::tuple<Args...>;
 
-		using create_info_t = std::conditional_t<construction_type == construction_type_t::tuple, std::tuple<Args...>, std::tuple_element_t<0, std::tuple<Args...>> >;
-
+		friend class handle<T, Args...>;
 
 		public:
-			using handled_container_t = utils::containers::remappable_handled_container<T>;
+			using handled_container_t = utils::containers::multihandled_default<T>;
 
 			using value_type      = handled_container_t::value_type;
 			using size_type       = handled_container_t::size_type;
@@ -73,7 +70,8 @@ namespace iige::resource
 			using const_pointer   = handled_container_t::const_pointer;
 
 			using handle_t = handle<T, Args...>;
-
+			
+			manager(Args&&... args) : handled_container{ std::forward<Args>(args)... } {}
 
 			handle_t load_sync(std::string name, Args&& ...args)
 				{
@@ -106,17 +104,25 @@ namespace iige::resource
 				auto cinfo_it{ map_create_infos.find(name) };
 				if (cinfo_it == map_create_infos.end())
 					{
-					throw std::runtime_error{"Could not find create info for resource \"" + name + "\"."};
+					throw std::runtime_error{"Could not find create info for resource \"" + name + "\"."}; 
 					}
 
 				auto eleme_it{ map.find(name) };
 				if (eleme_it != map.end()) { return { *this, eleme_it->second }; }
 
-				std::unique_lock lock{ handled_container_mutex };
-				auto handle{ handled_container.emplace(cinfo_it->second) };
-				map[name] = handle;
-
-				return { *this, handle };
+				try
+					{
+					std::unique_lock lock{ handled_container_mutex };
+					auto handle{ handled_container.emplace(construct(cinfo_it->second)) };
+					map[name] = handle;
+					return { *this, handle };
+					}
+				catch (const std::exception& e) 
+					{
+					utils::globals::logger.err("Failed to load resource \"" + name + "\"!\n" + e.what());
+					
+					return { *this, handled_container.get_default() };
+					}
 				}
 
 			handle_t load_async(std::string name)
@@ -131,7 +137,7 @@ namespace iige::resource
 					}
 
 				std::unique_lock lock{ handled_container_mutex };
-				auto handle{ handled_container.undergo_mythosis(0) };
+				auto handle{ handled_container.undergo_mythosis(handled_container.get_default()) };
 				map[name] = handle;
 
 				loading_queue.emplace(name, handle, cinfo_it->second);
@@ -169,11 +175,11 @@ namespace iige::resource
 				[this](std::vector<queue_value_type>& to_load) -> void
 					{
 					using namespace std::string_literals;
-					for (const auto& element : to_load)
+					for (auto& element : to_load)
 						{
 						try
 							{
-							auto store{ [&](T&& asset) -> void
+							/*auto store{ [&](T&& asset) -> void
 								{
 								std::unique_lock lock{ handled_container_mutex };
 
@@ -181,20 +187,29 @@ namespace iige::resource
 								handled_container.remap(element.handle, loaded_resource_handle);
 								} };
 
-							if constexpr(construction_type == construction_type_t::single_parameter)
-								{
-								store({ element.create_info });
-								}
-							else if constexpr (construction_type == construction_type_t::tuple)
-								{
-								store(utils::construct::from_tuple<T>(element.create_info));
-								}
+							store(construct(element.create_info));*/
+
+							std::unique_lock lock{ handled_container_mutex };
+
+							auto loaded_resource_handle{ handled_container.emplace(construct(element.create_info)) };
+							handled_container.remap(element.handle, loaded_resource_handle);
 							}
-						catch (const std::exception&) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!"); }
+						catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
 						}
 					} 
 				};
-		};
+				
+			T construct(const create_info_t& create_info)
+			requires (sizeof...(Args) == 1) && std::invocable<std::get<0>(create_info)> && std::same_as<T, decltype(std::get<0>(create_info)())>
+				{
+				return create_info();
+				}
+			T construct(const create_info_t& create_info)
+				{
+				return utils::construct::from_tuple<T>(create_info);
+				}
+			
+			};
 	template <typename T, typename ...Args> handle<T, Args...>::      reference handle<T, Args...>::operator* ()       noexcept { return                resman.get(inner_handle) ; }
 	template <typename T, typename ...Args> handle<T, Args...>::const_reference handle<T, Args...>::operator* () const noexcept { return                resman.get(inner_handle) ; }
 
@@ -212,6 +227,11 @@ namespace iige::resource
 		template<typename T>
 		concept manager = std::same_as<T, iige::resource::manager<typename T::create_info_t>>;
 		}
+
+	//Specialized edition to not require the user to write create parameters in the manager instantiation.
+	template<typename T>
+		requires std::constructible_from<T, typename T::create_info>
+	struct manager<T> : manager<T, typename T::create_info> {};
 	}
 namespace iige
 	{
