@@ -64,6 +64,9 @@
     <Filter Include="Source Files\opengl">
       <UniqueIdentifier>{607197bf-d9fa-4e19-b921-47ce054dca54}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\vulkan\resources">
+      <UniqueIdentifier>{e764713d-1b6e-40c5-8375-6df1c9605b69}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -214,6 +217,15 @@
     </ClInclude>
     <ClInclude Include="iige\resources_manager_async.h">
       <Filter>Header Files\iige</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\resources\mesh\mesh_cpu.h">
+      <Filter>Header Files\vulkan\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\resources\mesh\mesh_base.h">
+      <Filter>Header Files\vulkan\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\resources\mesh\mesh_gpu.h">
+      <Filter>Header Files\vulkan\resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

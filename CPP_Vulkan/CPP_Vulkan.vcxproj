@@ -190,6 +190,9 @@
     <ClInclude Include="vulkan\core\utils.h" />
     <ClInclude Include="vulkan\dependencies.h" />
     <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderer.h" />
+    <ClInclude Include="vulkan\resources\mesh\mesh_cpu.h" />
+    <ClInclude Include="vulkan\resources\mesh\mesh_base.h" />
+    <ClInclude Include="vulkan\resources\mesh\mesh_gpu.h" />
     <ClInclude Include="vulkan\window\swapchain.h" />
     <ClInclude Include="vulkan\window\surface.h" />
     <ClInclude Include="vulkan\window\window.h" />
