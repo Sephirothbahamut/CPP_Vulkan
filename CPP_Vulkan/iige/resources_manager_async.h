@@ -1,13 +1,10 @@
 #pragma once
 
 #include <tuple>
-#include <tuple >
 #include <utility>
 #include <concepts>
-#include <concepts >
 #include <functional>
-#include <filesystem >
-#include <filesystem  >
+#include <filesystem>
 #include <unordered_map>
 
 #include <utils/containers/multihandled_default.h>
@@ -69,7 +66,6 @@ namespace iige::resource
 					utils::observer_ptr<manager_async<T>> outer_container_ptr;
 				};
 			
-
 			using value_type      = handled_container_t::value_type;
 			using size_type       = handled_container_t::size_type;
 			using reference       = handled_container_t::reference;
@@ -157,7 +153,7 @@ namespace iige::resource
 				if (eleme_it != name_to_handle.end())
 					{
 					eleme_it->second.unloaded = true;
-					handled_container.erase_and_remap(eleme_it->second.handle, handled_container.get_default());
+					handled_container.reset_handle(eleme_it->second.handle);
 					}
 				else
 					{
@@ -307,11 +303,17 @@ namespace iige::resource
 							{
 							std::unique_lock lock{ handled_container_mutex };
 							unload_callback(*element.handle);
-							handled_container.erase_and_remap(element.handle, handled_container.get_default());
+							handled_container.reset_handle(element.handle);
 							}
 						catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
 						}
 					}
 				};
 		};
+		
+	namespace concepts
+		{
+		template<typename T>
+		concept manager_async = std::same_as<T, iige::resource::manager_async<typename T::value_type>>;
+		}
 	}

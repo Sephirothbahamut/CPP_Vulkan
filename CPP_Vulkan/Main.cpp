@@ -13,6 +13,7 @@
 #include "vulkan/core/model.h"
 
 #include "iige/loop.h"
+#include "iige/resources_manager.h"
 #include "iige/resources_manager_sync.h"
 #include "iige/resources_manager_async.h"
 
@@ -45,26 +46,28 @@ struct thong_t
 	std::string f;
 	};
 
-
-
-int main()
+void test_resource_managers()
 	{
-	using namespace std::string_literals;
-	namespace ugv = utils::graphics::vulkan;
-	//iige::resource::manager<thing_t, thing_t::create_info> rm_thing;
-	iige::resource::manager_async<thong_t> rm_thong{ []() {return thong_t{9, "default"}; } };
 
-	rm_thong.factories.emplace("pippo", []() {return thong_t{ 2, "pippo" }; });
-	
-	auto def{ rm_thong.load_async("sdbsdvdssdvd") };
-	auto dez{ rm_thong.load_async("pippo") };
-	auto dex{ rm_thong.load_async("pippo") };
-	
-	auto scd{ rm_thong.load_async("scd", []() {return thong_t{0, "scd"}; }) };
-	auto qwe{ rm_thong.load_async("qwe", []() {return thong_t{3, "qwe"}; }) };
-	
-	auto asy{ rm_thong.load_async("asy", []() {return thong_t{1, "asy"}; }) };
-	
+	using namespace std::string_literals;
+	//iige::resource::manager_async<int> rm_int{ []() {return int{0}; } };
+	iige::resource::manager_async<thong_t> rm_thong{ []() {return thong_t{9, "default"}; } };
+	iige::resource::manager_sync <thing_t> rm_thing{ []() {return thing_t{{}}; } };
+	iige::resources_manager rm{ rm_thong, rm_thing };
+
+
+	rm.get_containing_type<thong_t>().factories.emplace("pippo", []() {return thong_t{ 2, "pippo" }; });
+
+	auto def{ rm.load_async<thong_t>("sdbsdvdssdvd") };
+	auto dez{ rm.load_async<thong_t>("pippo") };
+	auto dex{ rm.load_async<thong_t>("pippo") };
+
+	//auto scd{ rm.get_containing_type<thong_t>().load_sync("wsdhajhsd") };
+	auto scd{ rm.load_sync<thong_t>("scd", []() {return thong_t{0, "scd"}; }) };
+	auto qwe{ rm.load_async<thong_t>("qwe", []() {return thong_t{3, "qwe"}; }) };
+
+	auto asy{ rm.load_async<thong_t>("asy", []() {return thong_t{1, "asy"}; }) };
+
 	utils::globals::logger.log("Printing default");
 	utils::globals::logger.log("def: " + std::to_string(def->a) + ", "s + def->f);
 	utils::globals::logger.log("dez: " + std::to_string(dez->a) + ", "s + dez->f);
@@ -72,37 +75,41 @@ int main()
 	utils::globals::logger.log("scd: " + std::to_string(scd->a) + ", "s + scd->f);
 	utils::globals::logger.log("qwe: " + std::to_string(qwe->a) + ", "s + qwe->f);
 	utils::globals::logger.log("asy: " + std::to_string(asy->a) + ", "s + asy->f);
-	
+
 	utils::globals::logger.log("Remapping def to dez");
 	def.remap(dez);
 	utils::globals::logger.log("def 2: " + std::to_string(def->a) + ", "s + def->f);
-	
-	utils::globals::logger.log("Unloading pippo");
-	rm_thong.unload_sync("pippo");
 
-	utils::globals::logger.log("dex u: " + std::to_string(dex->a) + ", "s + dex->f );
-	
+	utils::globals::logger.log("Unloading pippo");
+	rm.unload_sync<thong_t>("pippo");
+
+	utils::globals::logger.log("dex u: " + std::to_string(dex->a) + ", "s + dex->f);
+
 	utils::globals::logger.log("Reloading pippo");
-	rm_thong.load_sync("pippo");
-	
-	utils::globals::logger.log("dex r: " + std::to_string(dex->a) + ", "s + dex->f );
+	rm.load_sync<thong_t>("pippo");
+
+	utils::globals::logger.log("dex r: " + std::to_string(dex->a) + ", "s + dex->f);
 	utils::globals::logger.log("dez r: " + std::to_string(dez->a) + ", "s + dez->f);
 
 	utils::globals::logger.log("Printing async\nprova\nprova");
 	utils::globals::logger.flush();
-	while(true)
+	while (true)
 		{
 		using namespace std::literals::chrono_literals;
 		std::this_thread::sleep_for(.1s);
-		utils::globals::logger.log(std::to_string(asy->a) + ", "s + asy->f );
+		utils::globals::logger.log(std::to_string(asy->a) + ", "s + asy->f);
 		}
-	
-	
+	}
+
+int main()
+	{
+	namespace ugv = utils::graphics::vulkan;
+
 	try
 		{
 		ugv::core::manager manager;
 
-		//ugv::renderer::rectangle_renderer rect_renderer{manager};
+		ugv::renderer::rectangle_renderer rect_renderer{manager};
 		//Model model = load_model("data/models/spyro/spyro.obj");
 		//Model model = load_model("data/models/bunny.obj");
 
@@ -118,7 +125,6 @@ int main()
 				},
 			manager
 			};
-
 
 		//iige::resource::manager<ugv::core::shader_fragment, std::function<ugv::core::shader_fragment()>> rm_sh{ [&]() { return ugv::core::shader_fragment::from_spirv_file(manager.device.get(), "shader.frag"); }};
 		//rm_sh.load_async("pippo", [&]() { return ugv::core::shader_fragment::from_spirv_file(manager.device.get(), "shader.vert"); });

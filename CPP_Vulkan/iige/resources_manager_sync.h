@@ -112,7 +112,7 @@ namespace iige::resource
 				if (eleme_it != name_to_handle.end())
 					{
 					eleme_it->second.unloaded = true;
-					handled_container.erase_and_remap(eleme_it->second.handle, handled_container.get_default());
+					handled_container.reset_handle(eleme_it->second.handle);
 					}
 				else
 					{
@@ -141,5 +141,12 @@ namespace iige::resource
 				};
 
 			std::unordered_map<std::string, handle_and_status_t> name_to_handle;
-			};
+
+		};
+		
+	namespace concepts
+		{
+		template<typename T>
+		concept manager_sync = std::same_as<T, iige::resource::manager_sync<typename T::value_type>>;
+		}
 	}
