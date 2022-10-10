@@ -9,7 +9,7 @@
 
 #include <utils/containers/multihandled_default.h>
 #include <utils/construct.h>
-#include <utils/containers/self_consuming_queue.h>
+#include <utils/containers/multithreading/self_consuming_queue.h>
 #include <utils/logger.h>
 
 namespace iige::resource
@@ -265,22 +265,19 @@ namespace iige::resource
 				factory_t factory;
 				};
 
-			utils::containers::self_consuming_queue<loading_queue_value_type> loading_queue
+			utils::containers::multithreading::self_consuming_queue<loading_queue_value_type> loading_queue
 				{
-				[this](std::vector<loading_queue_value_type>& to_load) -> void
+				[this](loading_queue_value_type& element) -> void
 					{
 					using namespace std::string_literals;
-					for (auto& element : to_load)
+					try
 						{
-						try
-							{
-							std::unique_lock lock{ handled_container_mutex };
+						std::unique_lock lock{ handled_container_mutex };
 
-							auto loaded_resource_handle{ handled_container.emplace(element.factory()) };
-							handled_container.remap(element.handle, loaded_resource_handle);
-							}
-						catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
+						auto loaded_resource_handle{ handled_container.emplace(element.factory()) };
+						handled_container.remap(element.handle, loaded_resource_handle);
 						}
+					catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
 					}
 				};
 				
@@ -292,21 +289,18 @@ namespace iige::resource
 
 			unload_callback_t unload_callback;
 
-			utils::containers::self_consuming_queue<unloading_queue_value_type> unloading_queue
+			utils::containers::multithreading::self_consuming_queue<unloading_queue_value_type> unloading_queue
 				{
-				[this](std::vector<unloading_queue_value_type>& to_load) -> void
+				[this](unloading_queue_value_type& element) -> void
 					{
 					using namespace std::string_literals;
-					for (auto& element : to_load)
+					try
 						{
-						try
-							{
-							std::unique_lock lock{ handled_container_mutex };
-							unload_callback(*element.handle);
-							handled_container.reset_handle(element.handle);
-							}
-						catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
+						std::unique_lock lock{ handled_container_mutex };
+						unload_callback(*element.handle);
+						handled_container.reset_handle(element.handle);
 						}
+					catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
 					}
 				};
 		};

@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "image.h"
-#include "shader.h"
+#include "../resources/shader.h"
 
 #include "renderer_window_data.h"
 

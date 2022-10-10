@@ -5,7 +5,7 @@
 
 #include "vulkan/core/utils.h"
 #include "vulkan/core/manager.h"
-#include "vulkan/core/shader.h"
+#include "vulkan/resources/shader.h"
 #include "vulkan/window/window.h"
 #include "vulkan/window/window_sized_image.h"
 #include "vulkan/renderer/rectangle/rectangle_renderer.h"
@@ -104,6 +104,7 @@ void test_resource_managers()
 int main()
 	{
 	namespace ugv = utils::graphics::vulkan;
+	test_resource_managers();
 
 	try
 		{

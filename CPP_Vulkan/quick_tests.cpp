@@ -1,8 +1,8 @@
 #include <thread>
 #include <utils/logger.h>
-#include <utils/containers/self_consuming_queue.h>
+#include <utils/containers/multithreading/self_consuming_queue.h>
 
-void pluto(std::vector<int>&)
+void pluto(int&)
 	{
 	std::cout << "pippo";
 	}
@@ -15,7 +15,7 @@ void pippo()
 
 int mainf()
 	{
-	utils::containers::self_consuming_queue<int> q(pluto);
+	utils::containers::multithreading::self_consuming_queue<int> q(pluto);
 	return 0;
 	}
 

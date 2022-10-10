@@ -10,8 +10,8 @@ namespace utils::graphics::vulkan::renderer
 	{
 	rectangle_renderer::rectangle_renderer(core::manager& manager) :
 		renderer         {create_renderpass(manager)},
-		vertex_shader    { core::shader_vertex  ::from_spirv_file(manager.getter(this).device(), "data/shaders/rectangle/vert.spv") },
-		fragment_shader  { core::shader_fragment::from_spirv_file(manager.getter(this).device(), "data/shaders/rectangle/frag.spv") },
+		vertex_shader    { core::shader_vertex  ::from_file_spirv(manager.getter(this).device(), "data/shaders/rectangle/vert.spv") },
+		fragment_shader  { core::shader_fragment::from_file_spirv(manager.getter(this).device(), "data/shaders/rectangle/frag.spv") },
 		vk_unique_pipeline_layout{ create_pipeline_layout(manager) },
 		vk_unique_pipeline{ create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
 

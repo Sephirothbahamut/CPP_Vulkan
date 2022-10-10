@@ -30,7 +30,7 @@ namespace utils::graphics::vulkan::core
 				return vk_shader.get();
 			}
 
-			inline static shader from_spirv(const vk::Device& device, const std::vector<uint32_t>& spirv)
+			inline static shader from_buffer_spirv(const vk::Device& device, const std::vector<uint32_t>& spirv)
 			{
 				try
 				{
@@ -50,19 +50,19 @@ namespace utils::graphics::vulkan::core
 				}
 			}
 
-			inline static shader from_glsl(const vk::Device& device, const std::string& glsl, const std::string& error_tag = "raw_data")
+			inline static shader from_buffer_glsl(const vk::Device& device, const std::string& glsl, const std::string& error_tag = "raw_data")
 			{
-				return from_spirv(device, compile_glsl(glsl, shader_kind, error_tag));
+				return from_buffer_spirv(device, compile_glsl(glsl, shader_kind, error_tag));
 			}
 
-			inline static shader from_spirv_file(const vk::Device& device, const std::filesystem::path& file)
+			inline static shader from_file_spirv(const vk::Device& device, const std::filesystem::path& file)
 			{
-				return from_spirv(device, load_spirv(file));
+				return from_buffer_spirv(device, load_spirv(file));
 			}
 
-			inline static shader from_glsl_file(const vk::Device& device, const std::filesystem::path& file)
+			inline static shader from_file_glsl(const vk::Device& device, const std::filesystem::path& file)
 			{
-				return from_glsl(device, load_glsl(file), file.filename().string());
+				return from_buffer_glsl(device, load_glsl(file), file.filename().string());
 			}
 
 			inline vk::PipelineShaderStageCreateInfo get_create_info() const noexcept
