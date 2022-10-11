@@ -41,15 +41,25 @@ namespace utils::graphics::vulkan::core
 				{
 				return closer_t{*this};
 				}
+
+			vk::Instance&                   get_instance()                 noexcept { return instance.get(); }
+			core::swapchain_chosen_details& get_swapchain_chosen_details() noexcept { return swapchain_chosen_details; };
+			
+			vk::PhysicalDevice&             get_physical_device()          noexcept { return physical_device; }
+			vk::Device&                     get_device()                   noexcept { return device.get(); }
+
+			queues&                         get_queues()                   noexcept { return queues; }
+			core::flying_frames_pool&       get_flying_frames_pool()       noexcept { return flying_frames_pool; }
+			vk::CommandPool&                get_memory_op_command_pool()   noexcept { return vk_unique_memory_op_command_pool.get(); }
+			
+
 		private:
 			instance instance;
 			vk::DispatchLoaderDynamic dld;
 			utils_if_debug(debug_messenger debug_messenger);
 			swapchain_chosen_details swapchain_chosen_details;
 			physical_device physical_device;
-		public://TODO turn private again
 			device device;
-		private:
 			queues queues;
 			flying_frames_pool flying_frames_pool;
 			vk::UniqueCommandPool vk_unique_memory_op_command_pool;

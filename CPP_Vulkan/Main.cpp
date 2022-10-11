@@ -48,18 +48,16 @@ struct thong_t
 
 void test_resource_managers()
 	{
-
 	using namespace std::string_literals;
 	//iige::resource::manager_async<int> rm_int{ []() {return int{0}; } };
 	iige::resource::manager_async<thong_t> rm_thong{ []() {return thong_t{9, "default"}; } };
 	iige::resource::manager_sync <thing_t> rm_thing{ []() {return thing_t{{}}; } };
 	iige::resources_manager rm{ rm_thong, rm_thing };
 
-
-	rm.get_containing_type<thong_t>().factories.emplace("pippo", []() {return thong_t{ 2, "pippo" }; });
+	
 
 	auto def{ rm.load_async<thong_t>("sdbsdvdssdvd") };
-	auto dez{ rm.load_async<thong_t>("pippo") };
+	auto dez{ rm.load_async<thong_t>("pippo", []() {return thong_t{13, "pippo"}; }) };
 	auto dex{ rm.load_async<thong_t>("pippo") };
 
 	//auto scd{ rm.get_containing_type<thong_t>().load_sync("wsdhajhsd") };
@@ -101,14 +99,43 @@ void test_resource_managers()
 		}
 	}
 
+#include "vulkan/resources/gpu_resources_manager.h"
+#include "vulkan/resources/mesh/base.h"
+#include "vulkan/resources/mesh/gpu.h"
+
+
+#include "vulkan/core/memory_operations_command_buffer.h"
+
+
+
+void test_gpu_resource_managers(utils::graphics::vulkan::core::manager& manager)
+	{
+	iige::resource::manager_async<utils::graphics::vulkan::resources::mesh::base<3, float>> rm_mesh{[&]() {return std::move(utils::graphics::vulkan::resources::mesh::base<3, float>::from_file_obj("data/models/default.obj")); }};
+	
+	auto cpu_spyro{rm_mesh.load_async("spyro", []() { return utils::graphics::vulkan::resources::mesh::base<3, float>::from_file_obj("data/models/spyro/spyro.obj"); })};
+
+	utils::graphics::vulkan::core::memory_operations_command_buffer mocb{manager};
+	mocb.begin();
+
+	utils::graphics::vulkan::resource::gpu_manager_async<utils::graphics::vulkan::resources::mesh::gpu<3, float>> rm_gpu_mesh{{mocb.get(), *rm_mesh.get_default(), manager}};
+
+	utils::graphics::vulkan::gpu_resources_manager grm{manager, rm_gpu_mesh};
+
+	//rm_gpu_mesh.load_async("spyro", [&](vk::CommandBuffer& memory_operations_command_buffer) { return utils::graphics::vulkan::resources::mesh::gpu<3, float>{memory_operations_command_buffer, *rm_mesh.load_sync("spyro"), manager}; });
+
+	mocb.submit();
+
+	}
+
 int main()
 	{
 	namespace ugv = utils::graphics::vulkan;
-	test_resource_managers();
+	//test_resource_managers();
 
 	try
 		{
 		ugv::core::manager manager;
+		test_gpu_resource_managers(manager);
 
 		ugv::renderer::rectangle_renderer rect_renderer{manager};
 		//Model model = load_model("data/models/spyro/spyro.obj");

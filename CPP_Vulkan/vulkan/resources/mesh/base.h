@@ -13,7 +13,7 @@
 #include <utils/logger.h>
 #include "../vertex.h"
 
-namespace utils::vulkan::resources::mesh
+namespace utils::graphics::vulkan::resources::mesh
 	{
 	template <size_t size, typename floating_type>
 		requires (size == 2 || size == 3) && std::is_floating_point_v<floating_type>
@@ -21,6 +21,9 @@ namespace utils::vulkan::resources::mesh
 		{
 		using vertex_t = vertex<size, floating_type>;
 		public:
+			base           (base&& move) noexcept = default;
+			base& operator=(base&& move) noexcept = default;
+
 			inline static base from_file_obj(const std::filesystem::path& path)
 				{
 				std::vector<vertex_t> vertices;
@@ -72,12 +75,14 @@ namespace utils::vulkan::resources::mesh
 								attrib.normals[3 * index.normal_index + 2]
 								};
 							}
-
-						vertex.texture_coordinates =
+						if (attrib.texcoords.size() >= (2 * index.texcoord_index + 1)) //TODO test? we handwrote 2* and +1 completely out of the blue hoping it would work lol
 							{
-							attrib.texcoords[2 * index.texcoord_index + 0],
-							1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-							};
+							vertex.texture_coordinates =
+								{
+								attrib.texcoords[2 * index.texcoord_index + 0],
+								1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+								};
+							}
 
 						vertex.colour = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -101,6 +106,7 @@ namespace utils::vulkan::resources::mesh
 			base clone() { return {*this}; }
 
 		private:
+			base(std::vector<vertex_t>&& vertices, std::vector<uint32_t>&& indices) : vertices{std::move(vertices)}, indices{std::move(indices)} {}
 			base(const base& copy) = default;
 			base& operator=(const base& copy) = default;
 		};

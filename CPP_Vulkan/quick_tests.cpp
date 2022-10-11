@@ -23,6 +23,5 @@ int maing()
 	{
 	utils::logger<utils::message> new_logger{"main.txt"};
 	std::thread t_pippo{ &pippo };
-	while(true)
-		new_logger.log("main");
+	while (true) { new_logger.log("main"); }
 	}

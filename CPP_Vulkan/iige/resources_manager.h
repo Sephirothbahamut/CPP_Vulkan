@@ -20,6 +20,7 @@ namespace iige
 		{
 		template<typename T>
 		concept resource_manager = iige::resource::concepts::manager_sync<T> || iige::resource::concepts::manager_async<T>;
+		//TODO in depth concept
 		}
 
 	template<concepts::resource_manager ...managers_Ts>

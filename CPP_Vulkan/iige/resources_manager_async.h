@@ -232,6 +232,11 @@ namespace iige::resource
 					}
 				}
 
+			handle_t get_default() noexcept
+				{
+				return {*this, handled_container.get_default()};
+				}
+
 			std::unordered_map<std::string, factory_t> factories;
 
 		private:

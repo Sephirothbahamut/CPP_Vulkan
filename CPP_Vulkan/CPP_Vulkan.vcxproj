@@ -181,6 +181,7 @@
     <ClInclude Include="vulkan\core\instance.h" />
     <ClInclude Include="vulkan\core\manager.h" />
     <ClInclude Include="vulkan\core\device.h" />
+    <ClInclude Include="vulkan\core\memory_operations_command_buffer.h" />
     <ClInclude Include="vulkan\core\model.h" />
     <ClInclude Include="vulkan\core\queues.h" />
     <ClInclude Include="vulkan\core\renderer.h" />
@@ -189,6 +190,7 @@
     <ClInclude Include="vulkan\core\utils.h" />
     <ClInclude Include="vulkan\dependencies.h" />
     <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderer.h" />
+    <ClInclude Include="vulkan\resources\gpu_resources_manager.h" />
     <ClInclude Include="vulkan\resources\mesh\base.h" />
     <ClInclude Include="vulkan\resources\mesh\gpu.h" />
     <ClInclude Include="vulkan\resources\shader.h" />

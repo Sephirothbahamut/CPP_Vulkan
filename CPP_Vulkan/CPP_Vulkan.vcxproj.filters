@@ -230,6 +230,12 @@
     <ClInclude Include="vulkan\resources\vertex.h">
       <Filter>Header Files\vulkan\resources</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\resources\gpu_resources_manager.h">
+      <Filter>Header Files\vulkan\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\core\memory_operations_command_buffer.h">
+      <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\shaders\drawmesh\shader.frag">
