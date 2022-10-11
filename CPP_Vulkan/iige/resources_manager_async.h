@@ -12,6 +12,8 @@
 #include <utils/containers/multithreading/self_consuming_queue.h>
 #include <utils/logger.h>
 
+#include "resources_manager_sync.h"
+
 namespace iige::resource
 	{
 
@@ -312,7 +314,14 @@ namespace iige::resource
 		
 	namespace concepts
 		{
-		template<typename T>
-		concept manager_async = std::same_as<T, iige::resource::manager_async<typename T::value_type>>;
+		template<typename manager_t>
+		concept manager_async = requires(manager_t manager)
+			{
+					{ manager.load_async(std::string{}, typename manager_t::factory_t{}) } -> std::same_as<typename manager_t::handle_t>;
+					{ manager.load_async(std::string{})                                  } -> std::same_as<typename manager_t::handle_t>;
+					{ manager.unload_async(std::string{})                                } -> std::same_as<void>;
+
+			} && iige::resource::concepts::manager_sync<manager_t>;
+
 		}
 	}

@@ -74,7 +74,96 @@ namespace utils::graphics::vulkan
 				using pointer         = handled_container_t::pointer;
 				using const_pointer   = handled_container_t::const_pointer;
 
-				gpu_manager_async(T&& default_resource, unload_callback_t unload_callback = [](T&){}) : handled_container{std::move(default_resource)}, unload_callback{unload_callback} {}
+				gpu_manager_async(core::manager& vulkan_manager_ptr, T&& default_resource, unload_callback_t unload_callback = [](T&) {}) : 
+					vulkan_manager_ptr{ &vulkan_manager_ptr }, handled_container { std::move(default_resource) }, unload_callback{ unload_callback } {}
+
+				handle_t load_sync(const std::string& name, factory_t factory)
+					{
+					auto factory_it{ factories.find(name) };
+					if (factory_it != factories.end())
+						{
+						utils::globals::logger.err("Resource \"" + name + "\" already had a factory. The parameter factory will be ignored.");
+						}
+					else
+						{
+						factories[name] = factory;
+						}
+
+					return load_sync(name);
+					}
+
+				handle_t load_sync(const std::string& name)
+					{
+					auto eleme_it{ name_to_handle.find(name) };
+					if (eleme_it != name_to_handle.end())
+						{
+						if (eleme_it->second.unloaded)
+							{
+							eleme_it->second.unloaded = false;
+							auto& previous_handle = eleme_it->second.handle;
+
+							// Reload
+							auto factories_it{ factories.find(name) };
+							if (factories_it == factories.end())
+								{
+								utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
+								//After unload previous_handle is already set to default
+								}
+
+							try
+								{
+								auto handle{ handled_container.emplace(factories_it->second()) };
+								previous_handle.remap(handle);
+								}
+							catch (const std::exception& e)
+								{
+								utils::globals::logger.err("Failed to load resource \"" + name + "\"!\n" + e.what());
+								//After unload previous_handle is already set to default
+								}
+							}
+						return eleme_it->second.handle;
+						}
+
+					// First load
+					auto factories_it{ factories.find(name) };
+					if (factories_it == factories.end())
+						{
+						utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
+
+						return handled_container.get_default();
+						}
+
+					try
+						{
+						core::memory_operations_command_buffer mocb{ *vulkan_manager_ptr };
+						mocb.begin();
+						auto handle{ handled_container.emplace(factories_it->second(mocb.get())) };
+						name_to_handle.emplace(name, handle);
+						mocb.submit();
+						return handle;
+						}
+					catch (const std::exception& e)
+						{
+						utils::globals::logger.err("Failed to load resource \"" + name + "\"!\n" + e.what());
+
+						return handled_container.get_default();
+						}
+					}
+
+				void unload_sync(const std::string& name)
+					{
+					auto eleme_it{ name_to_handle.find(name) };
+					if (eleme_it != name_to_handle.end())
+						{
+						eleme_it->second.unloaded = true;
+						handled_container.reset_handle(eleme_it->second.handle);
+						}
+					else
+						{
+						utils::globals::logger.err("Failed to unload resource \"" + name + "\"; the resource did not exist.\n");
+						}
+					}
+
 
 				handle_t load_async(const std::string& name, factory_t factory)
 					{
@@ -162,6 +251,7 @@ namespace utils::graphics::vulkan
 					}
 				
 				utils::observer_ptr<core::memory_operations_command_buffer> memory_operations_command_buffer_ptr;
+				utils::observer_ptr<core::manager> vulkan_manager_ptr;
 				handled_container_t handled_container;
 
 				struct handle_and_status_t
@@ -227,10 +317,11 @@ namespace utils::graphics::vulkan
 		{
 		public:
 			gpu_resources_manager(core::manager& vulkan_manager, managers_Ts& ...managers) :
-				iige::resources_manager<managers_Ts...>{(&managers)...},
-				memory_operations_command_buffer {&vulkan_manager}
+				iige::resources_manager<managers_Ts...>{(managers)...},
+				memory_operations_command_buffer {vulkan_manager}
 				{
 				((managers.memory_operations_command_buffer_ptr = &memory_operations_command_buffer), ...);
+				((consumer.bind(managers.loading_queue)), ...);
 				}
 
 		private:

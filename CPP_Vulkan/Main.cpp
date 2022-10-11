@@ -112,18 +112,17 @@ void test_gpu_resource_managers(utils::graphics::vulkan::core::manager& manager)
 	{
 	iige::resource::manager_async<utils::graphics::vulkan::resources::mesh::base<3, float>> rm_mesh{[&]() {return std::move(utils::graphics::vulkan::resources::mesh::base<3, float>::from_file_obj("data/models/default.obj")); }};
 	
-	auto cpu_spyro{rm_mesh.load_async("spyro", []() { return utils::graphics::vulkan::resources::mesh::base<3, float>::from_file_obj("data/models/spyro/spyro.obj"); })};
+	auto cpu_spyro{rm_mesh.load_sync("spyro", []() { return utils::graphics::vulkan::resources::mesh::base<3, float>::from_file_obj("data/models/spyro/spyro.obj"); })};
 
 	utils::graphics::vulkan::core::memory_operations_command_buffer mocb{manager};
+	
 	mocb.begin();
-
-	utils::graphics::vulkan::resource::gpu_manager_async<utils::graphics::vulkan::resources::mesh::gpu<3, float>> rm_gpu_mesh{{mocb.get(), *rm_mesh.get_default(), manager}};
+	utils::graphics::vulkan::resource::gpu_manager_async<utils::graphics::vulkan::resources::mesh::gpu<3, float>> rm_gpu_mesh{manager, {mocb.get(), *rm_mesh.get_default(), manager}};
+	mocb.submit();
 
 	utils::graphics::vulkan::gpu_resources_manager grm{manager, rm_gpu_mesh};
 
-	//rm_gpu_mesh.load_async("spyro", [&](vk::CommandBuffer& memory_operations_command_buffer) { return utils::graphics::vulkan::resources::mesh::gpu<3, float>{memory_operations_command_buffer, *rm_mesh.load_sync("spyro"), manager}; });
-
-	mocb.submit();
+	rm_gpu_mesh.load_async("spyro", [&](vk::CommandBuffer& memory_operations_command_buffer) { return utils::graphics::vulkan::resources::mesh::gpu<3, float>{memory_operations_command_buffer, *rm_mesh.load_sync("spyro"), manager}; });
 
 	}
 

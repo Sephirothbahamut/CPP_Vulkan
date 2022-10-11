@@ -40,8 +40,6 @@ namespace utils::graphics::vulkan::resources::mesh
 				copy_buffer(memory_operations_buffer, vk_unique_staging_index_buffer .get(), vk_unique_index_buffer .get(), base.indices .size() * sizeof(base.indices [0]));
 				}
 
-			vk::UniqueBuffer buffer_unique;
-
 		private:
 			vk::UniqueBuffer       vk_unique_staging_vertex_buffer;
 			vk::UniqueDeviceMemory vk_unique_staging_vertex_memory;
