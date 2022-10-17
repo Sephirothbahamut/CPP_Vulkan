@@ -149,8 +149,8 @@ namespace iige::resource
 		template<class manager_t>
 		concept manager_sync = requires(manager_t manager) 
 			{
-				{ manager.load_sync  (std::string{}, typename manager_t::factory_t{})    } -> std::same_as<typename manager_t::handle_t>;
-				{ manager.load_sync  (std::string{})                                     } -> std::same_as<typename manager_t::handle_t>;
+				{ manager.load_sync  (std::string{}, typename manager_t::factory_t{})    } -> std::convertible_to<typename manager_t::handle_t>;
+				{ manager.load_sync  (std::string{})                                     } -> std::convertible_to<typename manager_t::handle_t>;
 				{ manager.unload_sync(std::string{})                                     } -> std::same_as<void>;
 			};
 		}

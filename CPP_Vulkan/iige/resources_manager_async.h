@@ -21,52 +21,13 @@ namespace iige::resource
 	template <typename T>
 	class manager_async // manages only one type of resource at a time
 		{
+
 		public:
 			using factory_t = std::function<T()>; 
 			using unload_callback_t = std::function<void(T&)>;
 			using handled_container_t = utils::containers::multihandled_default<T>;
-			struct handle_t : public handled_container_t::handle_t
-				{
-				friend class manager_async<T>;
-				public:
-					using value_type      = T;
-					using reference       = value_type&;
-					using const_reference = const value_type&;
-					using pointer         = value_type*;
-					using const_pointer   = const value_type* const;
-					using inner_handle_t  = handled_container_t::handle_t;
 
-					handle_t           (const handle_t& copy) : inner_handle_t{ copy }, outer_container_ptr{ copy.outer_container_ptr } {}
-					handle_t& operator=(const handle_t& copy)
-						{
-						this->inner_handle_t::operator=(copy);
-						outer_container_ptr = copy.outer_container_ptr;
-						return *this;
-						}
-					handle_t           (handle_t&& move) noexcept : inner_handle_t{ std::move(move) }, outer_container_ptr{ move.outer_container_ptr } {};
-					handle_t& operator=(handle_t&& move) noexcept 
-						{
-						this->inner_handle_t::operator=(std::move(move)); 
-						outer_container_ptr = move.outer_container_ptr;
-						return *this; 
-						}
-
-					constexpr       reference operator* (             )       noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::operator* (); }
-					constexpr const_reference operator* (             ) const noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::operator* (); }
-					constexpr       pointer   operator->(             )       noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::operator->(); }
-					constexpr const_pointer   operator->(             ) const noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::operator->(); }
-					constexpr       reference value     (             )       noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::value     (); }
-					constexpr const_reference value     (             ) const noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::value     (); }
-					constexpr       pointer   get       (             )       noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::get       (); }
-					constexpr const_pointer   get       (             ) const noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; return inner_handle_t::get       (); }
-					void                      remap(const handle_t& to)       noexcept { std::unique_lock lock{outer_container_ptr->handled_container_mutex}; inner_handle_t::remap(to); }
-
-				private:
-					handle_t(manager_async<T>& container, inner_handle_t inner_handle) : inner_handle_t{ inner_handle }, outer_container_ptr{ &container }
-						{};
-
-					utils::observer_ptr<manager_async<T>> outer_container_ptr;
-				};
+			using handle_t = handled_container_t::handle_t;
 			
 			using value_type      = handled_container_t::value_type;
 			using size_type       = handled_container_t::size_type;
@@ -75,45 +36,207 @@ namespace iige::resource
 			using pointer         = handled_container_t::pointer;
 			using const_pointer   = handled_container_t::const_pointer;
 
-			manager_async(factory_t factory, unload_callback_t unload_callback = [](T&){}) : handled_container{ factory() }, unload_callback{unload_callback} {}
-
-			handle_t load_sync(const std::string& name, factory_t factory)
+			struct handle_and_status_t : public handle_t
 				{
+				//implicit cast
+				handle_and_status_t(const handle_t& src, bool unloaded = false, bool loading = false) : handle_t{src}, unloaded{unloaded}, loading{loading} {}
+				operator handle_t() const noexcept { return *this; }
+
+				bool unloaded{false};
+				bool loading{false};
+				};
+
+		public:
+			manager_async(factory_t factory/*, unload_callback_t unload_callback = [](T&){}*/) : handled_container{factory()} {}//, unload_callback{unload_callback} {}
+			
+			/// <summary>
+			/// Loads a resources from the given factory into the associated name. If multiple factories are provided to the same name the last one will apply.
+			/// </summary>
+			/// <param name="name">The unique name to associate to this resource.</param>
+			/// <param name="factory">A callback that returns the resource to be created.</param>
+			/// <returns>An handle to the loaded resource, or to the default resource if the factory failed.</returns>
+			handle_and_status_t load_sync(const std::string& name, factory_t factory)
+				{
+				std::unique_lock lock{mutex_load_calls};
+
 				auto factory_it{ factories.find(name) };
 				if (factory_it != factories.end())
 					{
-					utils::globals::logger.err("Resource \"" + name + "\" already had a factory. The parameter factory will be ignored.");
+					utils::globals::logger.err("Resource \"" + name + "\" already had a factory.");
 					}
 				else
 					{
 					factories[name] = factory;
 					}
 
-				return load_sync(name);
+				return load_sync_inner(name, factory);
 				}
 
-			handle_t load_sync(const std::string& name)
+			/// <summary>
+			/// Loads a resources from the given factory into the associated name. Requires a factory to have already been associated with that name.
+			/// </summary>
+			/// <param name="name">The unique name to associate to this resource.</param>
+			/// <returns>An handle to the loaded resource, or to the default resource if the factory failed or was missing.</returns>
+			handle_and_status_t load_sync(const std::string& name)
 				{
+				std::unique_lock lock{mutex_load_calls};
+
+				auto factories_it{ factories.find(name) };
+				if (factories_it == factories.end())
+					{
+					utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
+
+					return handled_container.get_default();
+					}
+
+				return load_sync_inner(name, factories_it->second);
+				}
+
+			/// <summary>
+			/// Unloads a resource. All the handles in the program will remain valid but they will now point to the default resource.
+			/// </summary>
+			/// <typeparam name="T"></typeparam>
+			void unload_sync(const std::string& name)
+				{
+				std::unique_lock lock{mutex_load_calls};
+
 				auto eleme_it{ name_to_handle.find(name) };
 				if (eleme_it != name_to_handle.end())
 					{
-					if (eleme_it->second.unloaded)
+					eleme_it->second.unloaded = true;
+					handled_container.reset_handle(eleme_it->second);
+					}
+				else
+					{
+					utils::globals::logger.err("Failed to unload resource \"" + name + "\";the resource did not exist.\n");
+					}
+				}
+
+			/// <summary>
+			/// Asynchronously loads a resources from the given factory into the associated name. If multiple factories are provided to the same name the last one will apply.
+			/// The returned handle will point to the default resource until loading is completed and flush_loaded() is called.
+			/// </summary>
+			/// <param name="name">The unique name to associate to this resource.</param>
+			/// <param name="factory">A callback that returns the resource to be created.</param>
+			/// <returns>An handle to the loaded resource, or to the default resource if the factory failed. Will point to the default resource until loading is completed.</returns>
+			handle_and_status_t load_async(const std::string& name, factory_t factory)
+				{
+				std::unique_lock lock{mutex_load_calls};
+
+				auto factory_it{factories.find(name)};
+				if (factory_it != factories.end())
+					{
+					utils::globals::logger.err("Resource \"" + name + "\" already had a factory.");
+					}
+				else
+					{
+					factories[name] = factory;
+					}
+
+				return load_async_inner(name, factory);
+				}
+
+			/// <summary>
+			/// Loads a resources from the given factory into the associated name. Requires a factory to have already been associated with that name.
+			/// </summary>
+			/// <param name="name">The unique name to associate to this resource.</param>
+			/// <returns>An handle to the loaded resource, or to the default resource if the factory failed or was missing.</returns>
+			handle_and_status_t load_async(const std::string& name)
+				{
+				std::unique_lock lock{mutex_load_calls};
+
+				auto factories_it{factories.find(name)};
+				if (factories_it == factories.end())
+					{
+					utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
+
+					return handled_container.get_default();
+					}
+
+				return load_async_inner(name, factories_it->second);
+				}
+
+			//TODO check, consider removing
+			//void unload_async(const std::string& name)
+			//	{
+			//	auto eleme_it{ name_to_handle.find(name) };
+			//	if (eleme_it != name_to_handle.end())
+			//		{
+			//		eleme_it->second.unloaded = true; 
+			//		
+			//		unloading_queue.emplace(name, eleme_it->second);
+			//		}
+			//	else
+			//		{
+			//		utils::globals::logger.err("Failed to unload resource \"" + name + "\"; the resource did not exist.\n");
+			//		}
+			//	}
+
+			handle_t get_default() noexcept
+				{
+				return handled_container.get_default();
+				}
+
+			std::unordered_map<std::string, factory_t> factories;
+
+			/// <summary>
+			/// Moves resources loaded by the second thread in the active resources pool.
+			/// </summary>
+			/// <typeparam name="T"></typeparam>
+			void flush_loaded()
+				{
+				std::unique_lock lock_load_calls{mutex_load_calls};
+
+				auto& elements{loaded_buffer.swap_and_get()};
+				for (auto& element : elements)
+					{
+					auto eleme_it{name_to_handle.find(element.name)};
+					if (eleme_it != name_to_handle.end())
+						{
+						if (eleme_it->second.loading)
+							{
+							eleme_it->second.unloaded = false;
+							auto& previous_handle = eleme_it->second;
+
+							auto handle{handled_container.emplace(std::move(element.element))};
+							previous_handle.remap(handle);
+							}
+						//else was loaded multiple times and someone came first, ignore
+						// ^ akshually shouldn't happen because we don't push stuff to be loaded and we skip load sync if "loading" is true
+						else if constexpr (utils::compilation::debug) { throw "NO"; }
+						}
+					else
+						{
+						utils::globals::logger.err(""); //TODO error message
+						}
+					}
+				}
+
+			/// <summary>
+			/// Flushes all the pending loads in the second thread.
+			/// </summary>
+			void flush_loading() 
+				{
+				//TODO
+				}
+
+		private:
+			std::mutex mutex_load_calls;
+
+			handle_and_status_t load_sync_inner(const std::string& name, factory_t factory)
+				{
+				auto eleme_it{name_to_handle.find(name)};
+				if (eleme_it != name_to_handle.end())
+					{
+					if (eleme_it->second.unloaded && !eleme_it->second.loading)
 						{
 						eleme_it->second.unloaded = false;
-						auto& previous_handle = eleme_it->second.handle;
-						
-						// Reload
-						auto factories_it{ factories.find(name) };
-						if (factories_it == factories.end())
-							{
-							utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
-							//After unload previous_handle is already set to default
-							}
+						auto& previous_handle = eleme_it->second;
 
+						// Reload
 						try
 							{
-							std::unique_lock lock{ handled_container_mutex };
-							auto handle{ handled_container.emplace(factories_it->second()) };
+							auto handle{handled_container.emplace(factory())};
 							previous_handle.remap(handle);
 							}
 						catch (const std::exception& e)
@@ -122,155 +245,70 @@ namespace iige::resource
 							//After unload previous_handle is already set to default
 							}
 						}
-					return { *this, eleme_it->second.handle };
-					}
-
-
-				auto factories_it{ factories.find(name) };
-				if (factories_it == factories.end())
-					{
-					utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
-
-					return { *this, handled_container.get_default() };
-					}
-
-				try
-					{
-					std::unique_lock lock{ handled_container_mutex };
-					auto handle{ handled_container.emplace(factories_it->second()) };
-					name_to_handle.emplace(name, handle);
-					return { *this, handle };
-					}
-				catch (const std::exception& e)
-					{
-					utils::globals::logger.err("Failed to load resource \"" + name + "\"!\n" + e.what());
-
-					return { *this, handled_container.get_default() };
-					}
-				}
-
-			void unload_sync(const std::string& name)
-				{
-				auto eleme_it{ name_to_handle.find(name) };
-				if (eleme_it != name_to_handle.end())
-					{
-					eleme_it->second.unloaded = true;
-					handled_container.reset_handle(eleme_it->second.handle);
+					return eleme_it->second;
 					}
 				else
 					{
-					utils::globals::logger.err("Failed to unload resource \"" + name + "\";the resource did not exist.\n");
-					}
-				}
-
-			handle_t load_async(const std::string& name, factory_t factory)
-				{
-				auto factory_it{ factories.find(name) };
-				if (factory_it != factories.end())
-					{
-					utils::globals::logger.err("Resource \"" + name + "\" already had a factory. The parameter factory will be ignored.");
-					}
-				else
-					{
-					factories[name] = factory;
-					}
-
-				return load_async(name);
-				}
-
-			handle_t load_async(const std::string& name)
-				{
-				auto eleme_it{ name_to_handle.find(name) };
-				if (eleme_it != name_to_handle.end())
-					{
-					if (eleme_it->second.unloaded)
+					try
 						{
-						eleme_it->second.unloaded = false;
-						auto& previous_handle = eleme_it->second.handle;
-						
-						// Reload
-						auto factories_it{ factories.find(name) };
-						if (factories_it == factories.end())
-							{
-							utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
-							//After unload previous_handle is already set to default
-							}
+						auto handle{handled_container.emplace(factory())};
 
-						std::unique_lock lock{ handled_container_mutex };
-						loading_queue.emplace(name, previous_handle, factories_it->second);
+						name_to_handle.emplace(name, handle);
+						return handle;
 						}
-					return { *this, eleme_it->second.handle };
+					catch (const std::exception& e)
+						{
+						utils::globals::logger.err("Failed to load resource \"" + name + "\"!\n" + e.what());
+
+						auto handle{handled_container.get_default()};
+
+						name_to_handle.emplace(name, handle);
+						return handle;
+						}
 					}
-
-				// First load
-				auto factories_it{ factories.find(name) };
-				if (factories_it == factories.end())
-					{
-					utils::globals::logger.err("Could not find factory for resource \"" + name + "\".");
-
-					return { *this, handled_container.get_default() };
-					}
-
-				std::unique_lock lock{ handled_container_mutex };
-				auto handle{ handled_container.splice(handled_container.get_default()) };
-				name_to_handle.emplace(name, handle);
-				loading_queue.emplace(name, handle, factories_it->second);
-
-				return { *this, handle };
 				}
 
-			void unload_async(const std::string& name)
+			handle_and_status_t load_async_inner(const std::string& name, factory_t factory)
 				{
-				auto eleme_it{ name_to_handle.find(name) };
+				auto eleme_it{name_to_handle.find(name)};
 				if (eleme_it != name_to_handle.end())
 					{
-					eleme_it->second.unloaded = true; 
-					
-					unloading_queue.emplace(name, eleme_it->second.handle);
+					if (eleme_it->second.unloaded && !eleme_it->second.loading)
+						{
+						eleme_it->second.loading = true;
+						loading_queue.emplace(name, factory);
+						}
+					return eleme_it->second;
 					}
 				else
 					{
-					utils::globals::logger.err("Failed to unload resource \"" + name + "\"; the resource did not exist.\n");
+					eleme_it->second.loading = true;
+					loading_queue.emplace(name, factory);
+
+					auto handle{handled_container.get_default()};
+					name_to_handle.emplace(name, handle);
+					return handle;
 					}
-				}
-
-			handle_t get_default() noexcept
-				{
-				return {*this, handled_container.get_default()};
-				}
-
-			std::unordered_map<std::string, factory_t> factories;
-
-		private:
-			const T& get(handled_container_t::handle_t handle) const noexcept
-				{
-				std::unique_lock lock{ handled_container_mutex };
-				return handled_container[handle];
-				}
-			      T& get(handled_container_t::handle_t handle)       noexcept
-				{
-				std::unique_lock lock{ handled_container_mutex };
-				return handled_container[handle];
 				}
 
 			handled_container_t handled_container;
-
-			struct handle_and_status_t
-				{
-				handled_container_t::handle_t handle;
-				bool unloaded;
-				};
-
+			
 			std::unordered_map<std::string, handle_and_status_t> name_to_handle;
-
-			std::mutex handled_container_mutex;
 
 			struct loading_queue_value_type
 				{
-				std::string name; //only for debugging, second thread should never interact with the maps
-				typename handled_container_t::handle_t handle;
+				std::string name; 
 				factory_t factory;
 				};
+			struct loaded_buffer_value_type
+				{
+				std::string name;
+				T element;
+				};
+
+			// No need for map; all names must be unique because elements are added to the loading_queue only if their name doesn't exist or they are unloaded and not loading.
+			// Producer is loading_queue's thread, consumer is main thread on calling flush_loaded
+			utils::containers::multithreading::producer_consumer_queue<loaded_buffer_value_type> loaded_buffer;
 
 			utils::containers::multithreading::self_consuming_queue<loading_queue_value_type> loading_queue
 				{
@@ -279,37 +317,36 @@ namespace iige::resource
 					using namespace std::string_literals;
 					try
 						{
-						std::unique_lock lock{ handled_container_mutex };
-
-						auto loaded_resource_handle{ handled_container.emplace(element.factory()) };
-						handled_container.remap(element.handle, loaded_resource_handle);
+						auto loaded_resource{element.factory()};
+						
+						loaded_buffer.emplace(element.name, std::move(loaded_resource));
 						}
 					catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
 					}
 				};
 				
-			struct unloading_queue_value_type
-				{
-				std::string name; //only for debugging, second thread should never interact with the maps
-				typename handled_container_t::handle_t handle;
-				};
-
-			unload_callback_t unload_callback;
-
-			utils::containers::multithreading::self_consuming_queue<unloading_queue_value_type> unloading_queue
-				{
-				[this](unloading_queue_value_type& element) -> void
-					{
-					using namespace std::string_literals;
-					try
-						{
-						std::unique_lock lock{ handled_container_mutex };
-						unload_callback(*element.handle);
-						handled_container.reset_handle(element.handle);
-						}
-					catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
-					}
-				};
+			//struct unloading_queue_value_type
+			//	{
+			//	std::string name; //only for debugging, second thread should never interact with the maps
+			//	typename handled_container_t::handle_t handle;
+			//	};
+			//
+			//unload_callback_t unload_callback;
+			//
+			//utils::containers::multithreading::self_consuming_queue<unloading_queue_value_type> unloading_queue
+			//	{
+			//	[this](unloading_queue_value_type& element) -> void
+			//		{
+			//		using namespace std::string_literals;
+			//		try
+			//			{
+			//			std::unique_lock lock{ handled_container_mutex };
+			//			unload_callback(*element.handle);
+			//			handled_container.reset_handle(element.handle);
+			//			}
+			//		catch (const std::exception& e) { utils::globals::logger.err("Failed to load resource \"" + element.name + "\"!\n" + e.what()); }
+			//		}
+			//	};
 		};
 		
 	namespace concepts
@@ -317,8 +354,8 @@ namespace iige::resource
 		template<typename manager_t>
 		concept manager_async = requires(manager_t manager)
 			{
-					{ manager.load_async(std::string{}, typename manager_t::factory_t{}) } -> std::same_as<typename manager_t::handle_t>;
-					{ manager.load_async(std::string{})                                  } -> std::same_as<typename manager_t::handle_t>;
+					{ manager.load_async(std::string{}, typename manager_t::factory_t{}) } -> std::convertible_to<typename manager_t::handle_t>;
+					{ manager.load_async(std::string{})                                  } -> std::convertible_to<typename manager_t::handle_t>;
 					{ manager.unload_async(std::string{})                                } -> std::same_as<void>;
 
 			} && iige::resource::concepts::manager_sync<manager_t>;

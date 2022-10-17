@@ -56,15 +56,15 @@ void test_resource_managers()
 
 	
 
-	auto def{ rm.load_async<thong_t>("sdbsdvdssdvd") };
-	auto dez{ rm.load_async<thong_t>("pippo", []() {return thong_t{13, "pippo"}; }) };
-	auto dex{ rm.load_async<thong_t>("pippo") };
+	auto def{ rm_thong.load_async("sdbsdvdssdvd") };
+	auto dez{ rm_thong.load_async("pippo", []() {return thong_t{13, "pippo"}; }) };
+	auto dex{ rm_thong.load_async("pippo") };
 
-	//auto scd{ rm.get_containing_type<thong_t>().load_sync("wsdhajhsd") };
-	auto scd{ rm.load_sync<thong_t>("scd", []() {return thong_t{0, "scd"}; }) };
-	auto qwe{ rm.load_async<thong_t>("qwe", []() {return thong_t{3, "qwe"}; }) };
+	//auto scd{ rm_thong.get_containing_type().load_sync("wsdhajhsd") };
+	auto scd{ rm_thong.load_sync("scd", []() {return thong_t{0, "scd"}; }) };
+	auto qwe{ rm_thong.load_async("qwe", []() {return thong_t{3, "qwe"}; }) };
 
-	auto asy{ rm.load_async<thong_t>("asy", []() {return thong_t{1, "asy"}; }) };
+	auto asy{ rm_thong.load_async("asy", []() {return thong_t{1, "asy"}; }) };
 
 	utils::globals::logger.log("Printing default");
 	utils::globals::logger.log("def: " + std::to_string(def->a) + ", "s + def->f);
@@ -79,12 +79,12 @@ void test_resource_managers()
 	utils::globals::logger.log("def 2: " + std::to_string(def->a) + ", "s + def->f);
 
 	utils::globals::logger.log("Unloading pippo");
-	rm.unload_sync<thong_t>("pippo");
+	rm_thong.unload_sync("pippo");
 
 	utils::globals::logger.log("dex u: " + std::to_string(dex->a) + ", "s + dex->f);
 
 	utils::globals::logger.log("Reloading pippo");
-	rm.load_sync<thong_t>("pippo");
+	rm_thong.load_sync("pippo");
 
 	utils::globals::logger.log("dex r: " + std::to_string(dex->a) + ", "s + dex->f);
 	utils::globals::logger.log("dez r: " + std::to_string(dez->a) + ", "s + dez->f);
