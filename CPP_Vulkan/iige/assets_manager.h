@@ -11,29 +11,22 @@
 #include <utils/construct.h>
 #include <utils/memory.h>
 
-#include "resources_manager_async.h"
-#include "resources_manager_sync.h"
+#include "asset_manager.h"
 
 namespace iige
 	{
 	namespace concepts
 		{
 		template<typename T>
-		concept resource_manager = iige::resource::concepts::manager_sync<T> || iige::resource::concepts::manager_async<T>;
+		concept asset_manager = iige::asset::concepts::manager<T>;
 		//TODO in depth concept
 		}
 
-	template<concepts::resource_manager ...managers_Ts>
-	class resources_manager // manages resource_managers
+	template<concepts::asset_manager ...managers_Ts>
+	class assets_manager // manages asset_managers
 		{
 		using tuple_t = std::tuple<utils::observer_ptr<managers_Ts>...>;
 		struct containing_type_info_t { std::size_t index; bool direct; };
-
-		//template <typename T>
-		//struct qwe_get_type_containing_type
-		//	{
-		//	using type = typename get_type_containing_type<T, managers_Ts...>::type;
-		//	};
 
 		template <typename T, typename current, typename ...remaining>
 		struct get_type_containing_type
@@ -61,11 +54,10 @@ namespace iige
 			};
 
 		template<typename T>
-		//using container_t = std::remove_cvref_t<decltype(get_containing_type<T>())>;
 		using container_t = std::remove_cvref_t<typename get_type_containing_type<T, managers_Ts...>::type>;
 
 		public:
-			resources_manager(managers_Ts& ...managers) :
+			assets_manager(managers_Ts& ...managers) :
 				managers{ (&managers)... } {}
 
 			template<typename T>
@@ -81,7 +73,7 @@ namespace iige
 
 				constexpr containing_type_info_t containing_type_info{get_index_containing_type<type>()};
 
-				static_assert(containing_type_info.index < std::tuple_size_v<tuple_t>, "This resource manager does not contain the resource type you're trying to use");
+				static_assert(containing_type_info.index < std::tuple_size_v<tuple_t>, "This asset manager does not contain the asset type you're trying to use");
 				
 				if constexpr (containing_type_info.direct)
 					{
@@ -95,6 +87,7 @@ namespace iige
 
 			template <typename T>
 			handle_t<T> load_sync(const std::string& name, factory_t<T> factory)
+				requires asset::concepts::manager_sync<container_t<T>>
 				{
 				auto& container{ get_containing_type<T>() };
 
@@ -103,6 +96,7 @@ namespace iige
 				
 			template <typename T>
 			handle_t<T> load_sync(const std::string& name)
+				requires asset::concepts::manager_sync<container_t<T>>
 				{
 				auto& container{ get_containing_type<T>() };
 				
@@ -111,6 +105,7 @@ namespace iige
 
 			template <typename T>
 			void unload_sync(std::string name)
+				requires asset::concepts::manager_sync<container_t<T>>
 				{
 				auto& container{ get_containing_type<T>() };
 
@@ -119,7 +114,7 @@ namespace iige
 
 			template <typename T>
 			handle_t<T> load_async(std::string name, factory_t<T> factory)
-			requires resource::concepts::manager_async<container_t<T>>
+			requires asset::concepts::manager_async<container_t<T>>
 				{
 				auto& container{ get_containing_type<T>() };
 
@@ -128,7 +123,7 @@ namespace iige
 
 			template <typename T>
 			handle_t<T> load_async(std::string name)
-			requires resource::concepts::manager_async<container_t<T>>
+			requires asset::concepts::manager_async<container_t<T>>
 				{
 				auto& container{ get_containing_type<T>() };
 
@@ -137,7 +132,7 @@ namespace iige
 				
 			template <typename T>
 			void unload_async(std::string name)
-			requires resource::concepts::manager_async<container_t<T>>
+			requires asset::concepts::manager_async<container_t<T>>
 				{
 				auto& container{ get_containing_type<T>() };
 

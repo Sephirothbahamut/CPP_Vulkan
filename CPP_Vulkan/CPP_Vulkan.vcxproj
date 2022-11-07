@@ -166,9 +166,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="iige\loop.h" />
-    <ClInclude Include="iige\resources_manager.h" />
-    <ClInclude Include="iige\resources_manager_async.h" />
-    <ClInclude Include="iige\resources_manager_sync.h" />
+    <ClInclude Include="iige\one_time_tasks.h" />
+    <ClInclude Include="iige\assets_manager.h" />
+    <ClInclude Include="iige\asset_manager.h" />
+    <ClInclude Include="old mixed resman async.h" />
     <ClInclude Include="opengl\rectangle_renderer.h" />
     <ClInclude Include="opengl\shader.h" />
     <ClInclude Include="opengl\window.h" />

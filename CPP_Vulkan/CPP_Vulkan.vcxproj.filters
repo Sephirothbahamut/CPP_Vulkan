@@ -209,13 +209,10 @@
     <ClInclude Include="utils\remappable_handled_container.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="iige\resources_manager.h">
+    <ClInclude Include="iige\assets_manager.h">
       <Filter>Header Files\iige</Filter>
     </ClInclude>
-    <ClInclude Include="iige\resources_manager_sync.h">
-      <Filter>Header Files\iige</Filter>
-    </ClInclude>
-    <ClInclude Include="iige\resources_manager_async.h">
+    <ClInclude Include="iige\asset_manager.h">
       <Filter>Header Files\iige</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\resources\shader.h">
@@ -235,6 +232,12 @@
     </ClInclude>
     <ClInclude Include="vulkan\core\memory_operations_command_buffer.h">
       <Filter>Header Files\vulkan\core</Filter>
+    </ClInclude>
+    <ClInclude Include="old mixed resman async.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iige\one_time_tasks.h">
+      <Filter>Header Files\iige</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
