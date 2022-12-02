@@ -15,7 +15,7 @@
 #include <spirv-headers/spirv.hpp>
 #include <spirv_cross/spirv.hpp>
 
-#include "manager.h"
+#include "../core/manager.h"
 
 namespace utils::graphics::vulkan::core
 {

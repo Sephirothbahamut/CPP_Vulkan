@@ -120,7 +120,7 @@
     <ClCompile Include="vulkan\core\renderer.cpp">
       <Filter>Source Files\vulkan\core</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\renderer\rectangle\rectangle_renderer.cpp">
+    <ClCompile Include="vulkan\renderer\rectangle\rectangle_renderpass.cpp">
       <Filter>Source Files\vulkan\renderer\rectangle</Filter>
     </ClCompile>
     <ClCompile Include="MainOGL.cpp">
@@ -188,7 +188,7 @@
     <ClInclude Include="vulkan\core\renderer.h">
       <Filter>Header Files\vulkan\core</Filter>
     </ClInclude>
-    <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderer.h">
+    <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderpass.h">
       <Filter>Header Files\vulkan\renderer\rectangle</Filter>
     </ClInclude>
     <ClInclude Include="iige\loop.h">

@@ -1,25 +1,31 @@
 #pragma once
 
-#include "../../core/renderer.h"
 #include "../../window/window.h"
 #include "../../core/model.h"
+#include "../../resources/shader.h"
+#include "../../resources/vertex.h"
 
 namespace utils::graphics::vulkan::renderer
 	{
-	class rectangle_renderer : public core::renderer
+	class rectangle_renderpass
 		{
 
 		public:
-			rectangle_renderer(core::manager& manager);
+			rectangle_renderpass(core::manager& manager);
 
-			void draw(core::manager& manager, const window::window& window, float delta_time);
+			vk::RenderPass get_renderpass() { return vk_unique_renderpass.get(); }
+
+
+			void record_commands(const window::window& window, vk::CommandBuffer& command_buffer, vk::Framebuffer framebuffer, float delta_time);
+
 		private:
-			core::shader_vertex                   vertex_shader;
-			core::shader_fragment                 fragment_shader;
-			vk::UniquePipelineLayout              vk_unique_pipeline_layout;
-			vk::UniquePipeline                    vk_unique_pipeline;
+			vk::UniqueRenderPass              vk_unique_renderpass;
+			core::shader_vertex               vertex_shader;
+			core::shader_fragment             fragment_shader;
+			vk::UniquePipelineLayout          vk_unique_pipeline_layout;
+			vk::UniquePipeline                vk_unique_pipeline;
 
-			std::array<utils::math::vec2f, 6>     vertices
+			std::array<utils::math::vec2f, 6> vertices
 				{{
 					{0.0f, 0.0f},
 					{1.0f, 0.0f},
@@ -29,10 +35,10 @@ namespace utils::graphics::vulkan::renderer
 					{0.0f, 1.0f}
 				}};
 
-			vk::UniqueBuffer                      vk_unique_staging_vertex_buffer;
-			vk::UniqueDeviceMemory                vk_unique_staging_vertex_memory;
-			vk::UniqueBuffer                      vk_unique_vertex_buffer;
-			vk::UniqueDeviceMemory                vk_unique_vertex_memory;
+			vk::UniqueBuffer                  vk_unique_staging_vertex_buffer;
+			vk::UniqueDeviceMemory            vk_unique_staging_vertex_memory;
+			vk::UniqueBuffer                  vk_unique_vertex_buffer;
+			vk::UniqueDeviceMemory            vk_unique_vertex_memory;
 
 			vk::UniqueRenderPass     create_renderpass(const core::manager& manager) const;
 
@@ -47,7 +53,7 @@ namespace utils::graphics::vulkan::renderer
 			template <typename T>
 			void fill_staging_memory(const core::manager& manager, vk::Buffer& buffer, vk::DeviceMemory& memory, const std::array<T,6>& in_data)
 				{
-				const auto& device{ manager.getter(this).device() };
+				const auto& device{ manager.get_device() };
 				size_t buffer_size{ sizeof(in_data[0]) * in_data.size() };
 
 				utils::observer_ptr<void> data{ device.mapMemory(memory, 0, buffer_size, vk::MemoryMapFlags{}) };
@@ -59,7 +65,5 @@ namespace utils::graphics::vulkan::renderer
 				}
 
 			void copy_buffer(core::manager& manager, const vk::Buffer& src, vk::Buffer dst, size_t size);
-
-			void record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index, float delta_time);
 		};
 	}

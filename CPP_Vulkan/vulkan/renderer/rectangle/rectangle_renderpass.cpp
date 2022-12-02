@@ -1,4 +1,4 @@
-#include "rectangle_renderer.h"
+#include "rectangle_renderpass.h"
 
 #include <array>
 #include <utils/compilation/debug.h>
@@ -8,10 +8,10 @@
 
 namespace utils::graphics::vulkan::renderer
 	{
-	rectangle_renderer::rectangle_renderer(core::manager& manager) :
-		renderer         {create_renderpass(manager)},
-		vertex_shader    { core::shader_vertex  ::from_file_spirv(manager.getter(this).device(), "data/shaders/rectangle/vert.spv") },
-		fragment_shader  { core::shader_fragment::from_file_spirv(manager.getter(this).device(), "data/shaders/rectangle/frag.spv") },
+	rectangle_renderpass::rectangle_renderpass(core::manager& manager) :
+		vk_unique_renderpass{create_renderpass(manager)},
+		vertex_shader    { core::shader_vertex  ::from_file_spirv(manager.get_device(), "data/shaders/rectangle/vert.spv") },
+		fragment_shader  { core::shader_fragment::from_file_spirv(manager.get_device(), "data/shaders/rectangle/frag.spv") },
 		vk_unique_pipeline_layout{ create_pipeline_layout(manager) },
 		vk_unique_pipeline{ create_pipeline(manager, vk_unique_renderpass.get(), vertex_shader, fragment_shader) },
 
@@ -22,71 +22,22 @@ namespace utils::graphics::vulkan::renderer
 		vk_unique_vertex_memory{ create_memory(manager, vk_unique_vertex_buffer.get(), vk::MemoryPropertyFlagBits::eDeviceLocal) }
 
 		{
-		const auto& device{ manager.getter(this).device() };
+		const auto& device{ manager.get_device() };
 		device.bindBufferMemory(vk_unique_staging_vertex_buffer.get(), vk_unique_staging_vertex_memory.get(), 0);
 		device.bindBufferMemory(vk_unique_vertex_buffer.get(), vk_unique_vertex_memory.get(), 0);
 
 		fill_staging_memory(manager, vk_unique_staging_vertex_buffer.get(), vk_unique_staging_vertex_memory.get(), vertices);
 
 		copy_buffer(manager, vk_unique_staging_vertex_buffer.get(), vk_unique_vertex_buffer.get(), sizeof(vertices[0])* vertices.size());
-
 		}
 
-	void rectangle_renderer::draw(core::manager& manager, const window::window& window, float delta_time)
-		{
-		if constexpr (utils::compilation::debug)
-			{
-			//if (vk_unique_framebuffers.empty()) { throw std::runtime_error{ "You forgot to call resize on the current window." }; }
-			}
 
-		auto current_flying_frame{ manager.getter(this).flying_frames_pool().get() };
-		auto& device{ manager.getter(this).device() };
-		auto& swapchain{ window.get_swapchain() };
-
-		if (device.waitForFences(1, &current_flying_frame.vk_fence_frame_in_flight, VK_TRUE, std::numeric_limits<uint64_t>::max()) != vk::Result::eSuccess)
-			{
-			throw std::runtime_error{ "Failed wait for fences" };
-			}
-
-		// TODO check if it doesnt explode your pc
-		uint32_t image_index = swapchain.next_image(manager, current_flying_frame.vk_semaphore_image_available);
-		current_flying_frame.vk_command_buffer.reset();
-
-		record_commands(window, current_flying_frame.vk_command_buffer, image_index, delta_time);
-
-		vk::Semaphore          wait_semaphores[]{ current_flying_frame.vk_semaphore_image_available };
-		vk::Semaphore          signal_semaphores[]{ current_flying_frame.vk_semaphore_render_finished };
-		vk::PipelineStageFlags wait_stages[]{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
-
-		if (device.resetFences(1, &current_flying_frame.vk_fence_frame_in_flight) != vk::Result::eSuccess)
-			{
-			throw std::runtime_error{ "Failed reset fences" };
-			}
-
-		try
-			{
-			manager.getter(this).queues().get_graphics().queue.submit
-			({ {
-				.waitSemaphoreCount   { 1 },
-				.pWaitSemaphores      { wait_semaphores },
-				.pWaitDstStageMask    { wait_stages },
-				.commandBufferCount   { 1 },
-				.pCommandBuffers      { &current_flying_frame.vk_command_buffer },
-				.signalSemaphoreCount { 1 },
-				.pSignalSemaphores    { signal_semaphores },
-			} }, current_flying_frame.vk_fence_frame_in_flight);
-			}
-		catch (vk::SystemError system_error) { throw std::runtime_error{ "Failed to submit to queue" }; }
-
-		swapchain.present(manager, current_flying_frame.vk_semaphore_render_finished, image_index);
-		}
-
-	vk::UniqueRenderPass rectangle_renderer::create_renderpass(const core::manager& manager) const
+	vk::UniqueRenderPass rectangle_renderpass::create_renderpass(const core::manager& manager) const
 		{
 		// color attachment 
 		vk::AttachmentDescription color_attachment_description
 			{
-			.format { manager.getter(this).swapchain_chosen_details().get_format().format },
+			.format { manager.get_swapchain_chosen_details().get_format().format },
 			.samples { vk::SampleCountFlagBits::e1 },
 			.loadOp { vk::AttachmentLoadOp::eClear },
 			.storeOp { vk::AttachmentStoreOp::eStore },
@@ -133,7 +84,7 @@ namespace utils::graphics::vulkan::renderer
 		vk::UniqueRenderPass ret;
 		try
 			{
-			ret = manager.getter(this).device().createRenderPassUnique(render_pass_create_info);
+			ret = manager.get_device().createRenderPassUnique(render_pass_create_info);
 			}
 		catch (vk::SystemError err)
 			{
@@ -143,7 +94,7 @@ namespace utils::graphics::vulkan::renderer
 		return ret;
 		}
 
-	vk::UniquePipelineLayout rectangle_renderer::create_pipeline_layout(const core::manager& manager) const
+	vk::UniquePipelineLayout rectangle_renderpass::create_pipeline_layout(const core::manager& manager) const
 		{
 
 		vk::PipelineLayoutCreateInfo pipeline_layout_info
@@ -155,7 +106,7 @@ namespace utils::graphics::vulkan::renderer
 		vk::UniquePipelineLayout pipeline_layout;
 		try
 			{
-			pipeline_layout = manager.getter(this).device().createPipelineLayoutUnique(pipeline_layout_info);
+			pipeline_layout = manager.get_device().createPipelineLayoutUnique(pipeline_layout_info);
 			}
 		catch (vk::SystemError err)
 			{
@@ -164,7 +115,7 @@ namespace utils::graphics::vulkan::renderer
 		return pipeline_layout;
 		}
 
-	vk::UniquePipeline rectangle_renderer::create_pipeline(const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
+	vk::UniquePipeline rectangle_renderpass::create_pipeline(const core::manager& manager, const vk::RenderPass& renderpass, const core::shader_vertex& vertex_shader, const core::shader_fragment& fragment_shader) const
 		{
 		std::vector<vk::DynamicState> dynamic_states;
 
@@ -259,19 +210,19 @@ namespace utils::graphics::vulkan::renderer
 
 		vk::GraphicsPipelineCreateInfo graphics_pipeline_create_info
 			{
-			//shader-stage setup
-			.stageCount { 2 },
-			.pStages { shader_stages_infos.data() },
-			.pVertexInputState { &vertex_input_create_info },
-			.pInputAssemblyState { &input_assembly_create_info },
-			.pViewportState { &viewport_state },
-			.pRasterizationState { &rasterizer },
-			.pMultisampleState { &multisampling },
-			.pDepthStencilState { nullptr }, // Optional
-			.pColorBlendState { &color_blending },
-			.pDynamicState { &dynamic_state_info },
+			//shader-stagesetup
+			.stageCount{2},
+			.pStages{shader_stages_infos.data()},
+			.pVertexInputState{&vertex_input_create_info},
+			.pInputAssemblyState{&input_assembly_create_info},
+			.pViewportState{&viewport_state},
+			.pRasterizationState{&rasterizer},
+			.pMultisampleState{&multisampling},
+			.pDepthStencilState{nullptr},//Optional
+			.pColorBlendState{&color_blending},
+			.pDynamicState{&dynamic_state_info},
 
-			//fixed-function setup
+			//fixed-functionsetup
 			.layout { vk_unique_pipeline_layout.get() },
 
 			//render-pass setup
@@ -283,7 +234,7 @@ namespace utils::graphics::vulkan::renderer
 			.basePipelineIndex { -1 }, // Optional
 			};
 
-		auto ret = manager.getter(this).device().createGraphicsPipelineUnique(nullptr, graphics_pipeline_create_info);
+		auto ret = manager.get_device().createGraphicsPipelineUnique(nullptr, graphics_pipeline_create_info);
 		if (ret.result != vk::Result::eSuccess)
 			{
 			throw std::runtime_error("Failed to create render pass!");
@@ -292,41 +243,41 @@ namespace utils::graphics::vulkan::renderer
 		return std::move(ret.value);
 		}
 
-		vk::UniqueBuffer rectangle_renderer::create_buffer(const core::manager& manager, vk::BufferUsageFlags usage_flags, size_t size) const
+		vk::UniqueBuffer rectangle_renderpass::create_buffer(const core::manager& manager, vk::BufferUsageFlags usage_flags, size_t size) const
 			{
 			vk::BufferCreateInfo bufferInfo
 				{
-					.size        { size },
-					.usage       { usage_flags },
-					.sharingMode { vk::SharingMode::eExclusive },
+				.size       {size},
+				.usage      {usage_flags},
+				.sharingMode{vk::SharingMode::eExclusive},
 				};
-			return manager.getter(this).device().createBufferUnique(bufferInfo);
+			return manager.get_device().createBufferUnique(bufferInfo);
 			}
 
-		vk::UniqueDeviceMemory rectangle_renderer::create_memory(const core::manager& manager, const vk::Buffer& buffer, vk::MemoryPropertyFlags mem_props_flags) const
+		vk::UniqueDeviceMemory rectangle_renderpass::create_memory(const core::manager& manager, const vk::Buffer& buffer, vk::MemoryPropertyFlags mem_props_flags) const
 			{
-			const auto& device{ manager.getter(this).device() };
+			const auto& device{ manager.get_device() };
 
 			vk::MemoryRequirements mem_requirements{ device.getBufferMemoryRequirements(buffer) };
 
 			vk::MemoryAllocateInfo alloc_info
 				{
 				.allocationSize{mem_requirements.size},
-				.memoryTypeIndex{core::details::find_memory_type(manager.getter(this).physical_device(), mem_requirements.memoryTypeBits, mem_props_flags)}
+				.memoryTypeIndex{core::details::find_memory_type(manager.get_physical_device(), mem_requirements.memoryTypeBits, mem_props_flags)}
 				};
 			return device.allocateMemoryUnique(alloc_info);
 			}
 
-		void rectangle_renderer::copy_buffer(core::manager& manager, const vk::Buffer& src, vk::Buffer dst, size_t size)
+		void rectangle_renderpass::copy_buffer(core::manager& manager, const vk::Buffer& src, vk::Buffer dst, size_t size)
 			{
-			const auto& device{ manager.getter(this).device() };
-			const auto& graphics_queue{ manager.getter(this).queues().get_graphics().queue };
+			const auto& device{ manager.get_device() };
+			const auto& graphics_queue{ manager.get_queues().get_graphics().queue };
 
 			vk::CommandBufferAllocateInfo alloc_info
 				{
-				.commandPool { manager.getter(this).memory_op_command_pool() },
-				.level { vk::CommandBufferLevel::ePrimary },
-				.commandBufferCount { 1 },
+				.commandPool{manager.get_memory_op_command_pool()},
+				.level{vk::CommandBufferLevel::ePrimary },
+				.commandBufferCount{1},
 				};
 
 			vk::UniqueCommandBuffer command_buffer{ std::move(device.allocateCommandBuffersUnique(alloc_info)[0]) };
@@ -340,9 +291,9 @@ namespace utils::graphics::vulkan::renderer
 
 			vk::BufferCopy copyRegion
 				{
-				.srcOffset{ 0    }, // Optional
-				.dstOffset{ 0    }, // Optional
-				.size     { size }
+				.srcOffset{0   }, // Optional
+				.dstOffset{0   }, // Optional
+				.size     {size}
 				};
 
 			command_buffer.get().copyBuffer(src, dst, copyRegion); //seeplide dovesp elode. cit dige sappiamos 
@@ -360,50 +311,43 @@ namespace utils::graphics::vulkan::renderer
 			}
 
 		// Record
-		void rectangle_renderer::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, uint32_t image_index, float delta_time)
+		void rectangle_renderpass::record_commands(const window::window& window, vk::CommandBuffer& command_buffer, vk::Framebuffer framebuffer, float delta_time)
 			{
-			vk::CommandBufferBeginInfo beginInfo; // for now empty is okay (we dont need primary/secondary buffer info or flags)
-			try {
-				command_buffer.begin(beginInfo);
-				}
-			catch (vk::SystemError err) {
-				throw std::runtime_error("failed to begin recording command buffer!");
-				}
+			vk::ClearValue clear_color{std::array<float, 4>{0.0f, 0.0f, 0.2f, 0.0f}};
 
-			vk::ClearValue clear_color{ std::array<float, 4>{ 0.0f, 0.0f, 0.2f, 0.0f } };
-			
+
 			vk::RenderPassBeginInfo renderpass_info
 				{
-					.renderPass  {vk_unique_renderpass.get()},
-					.framebuffer {window_dependent_data_ptrs[&window]->getter(this).framebuffer(image_index)},
-					.renderArea
+				.renderPass  {vk_unique_renderpass.get()},
+				.framebuffer {framebuffer},
+				.renderArea
 					{
-						.offset { 0, 0 },
-						.extent { vk::Extent2D{window.width, window.height} },
+					.offset {0, 0},
+					.extent {vk::Extent2D{window.width, window.height}},
 					},
-					.clearValueCount {1},
-					.pClearValues {&clear_color},
+				.clearValueCount {1},
+				.pClearValues {&clear_color},
 				};
 
 			command_buffer.beginRenderPass(renderpass_info, vk::SubpassContents::eInline);
 
+
 			command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, vk_unique_pipeline.get());
 
-			command_buffer.setViewport(0, vk::Viewport{ .x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f} });
-			command_buffer.setScissor(0, vk::Rect2D{ .offset{0, 0}, .extent{window.width, window.height} });
+			command_buffer.setViewport(0, vk::Viewport{.x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f}});
+			command_buffer.setScissor(0, vk::Rect2D{.offset{0, 0}, .extent{window.width, window.height}});
 
-			vk::Buffer vertex_buffers[] = { vk_unique_vertex_buffer.get() };
-			vk::DeviceSize offsets[] = { 0 };
+			vk::Buffer vertex_buffers[] = {vk_unique_vertex_buffer.get()};
+			vk::DeviceSize offsets[] = {0};
 			command_buffer.bindVertexBuffers(0, 1, vertex_buffers, offsets);
 
 			command_buffer.draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
 			command_buffer.endRenderPass();
 
-			try {
-				command_buffer.end();
-				}
-			catch (vk::SystemError err) {
+			try { command_buffer.end(); }
+			catch (vk::SystemError err) 
+				{
 				throw std::runtime_error("Failed to record command buffer!");
 				}
 			}

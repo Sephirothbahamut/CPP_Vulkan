@@ -20,7 +20,7 @@ namespace utils::graphics::vulkan::window
 	{
 	swapchain::swapchain(const core::manager& manager, const vk::SurfaceKHR& surface, utils::math::vec2u window_size, utils::observer_ptr<swapchain> old_swapchain) :
 		vk_swapchain{ create_swapchain(manager, surface, window_size, (old_swapchain ? old_swapchain->vk_swapchain.get() : nullptr)) },
-		images{ manager.getter(this).device().getSwapchainImagesKHR(vk_swapchain.get()) },
+		images{ manager.get_device().getSwapchainImagesKHR(vk_swapchain.get()) },
 		image_views{ create_image_views(manager, images) }
 		{}
 
@@ -36,7 +36,7 @@ namespace utils::graphics::vulkan::window
 
 	uint32_t swapchain::next_image(const core::manager & manager, vk::Semaphore vk_semaphore_image_available) const noexcept
 		{
-		auto ret{ manager.getter(this).device()
+		auto ret{ manager.get_device()
 			.acquireNextImageKHR(vk_swapchain.get(), std::numeric_limits<uint64_t>::max(), vk_semaphore_image_available, nullptr) };
 		if (ret.result != vk::Result::eSuccess)
 			{
@@ -58,14 +58,14 @@ namespace utils::graphics::vulkan::window
 					.pImageIndices      { &image_index },
 					.pResults           { nullptr },
 			};
-		manager.getter(this).queues().get_present().queue.presentKHR(&present_info);
+		manager.get_queues().get_present().queue.presentKHR(&present_info);
 		}
 
 	vk::UniqueSwapchainKHR swapchain::create_swapchain(const core::manager& manager, const vk::SurfaceKHR& surface, utils::math::vec2u window_size, vk::SwapchainKHR old_swapchain)
 		{
-		auto capabilities{ manager.getter(this).physical_device().getSurfaceCapabilitiesKHR(surface) };
+		auto capabilities{ manager.get_physical_device().getSurfaceCapabilitiesKHR(surface) };
 		
-		auto swapchain_chosen_details{ manager.getter(this).swapchain_chosen_details() };
+		auto swapchain_chosen_details{ manager.get_swapchain_chosen_details() };
 
 		//TODO qui si fa la finestra trasparente :)
 		auto composite_alpha{vk::CompositeAlphaFlagBitsKHR::eOpaque};
@@ -105,7 +105,7 @@ namespace utils::graphics::vulkan::window
 
 		if (true)
 			{
-			auto queues{ manager.getter(this).queues() };
+			auto queues{ manager.get_queues() };
 			std::array<uint32_t, 2> indices{ queues.get_graphics().index, queues.get_present().index };
 			if (queues.get_graphics().index == queues.get_present().index)
 				{
@@ -121,7 +121,7 @@ namespace utils::graphics::vulkan::window
 				}
 			}
 
-		return manager.getter(this).device().createSwapchainKHRUnique(info);
+		return manager.get_device().createSwapchainKHRUnique(info);
 		}
 
 	std::vector<vk::UniqueImageView> swapchain::create_image_views(const core::manager& manager, const std::vector<vk::Image>& swap_chain_images) const noexcept
@@ -134,7 +134,7 @@ namespace utils::graphics::vulkan::window
 				{
 					.image = swap_chain_images[i],
 					.viewType = vk::ImageViewType::e2D,
-					.format = manager.getter(this).swapchain_chosen_details().get_format().format,
+					.format = manager.get_swapchain_chosen_details().get_format().format,
 					.components
 					{
 						.r = vk::ComponentSwizzle::eIdentity,
@@ -151,7 +151,7 @@ namespace utils::graphics::vulkan::window
 						.layerCount = 1,
 					}
 				};
-			ret[i] = manager.getter(this).device().createImageViewUnique(create_info);
+			ret[i] = manager.get_device().createImageViewUnique(create_info);
 			}
 
 		return ret;

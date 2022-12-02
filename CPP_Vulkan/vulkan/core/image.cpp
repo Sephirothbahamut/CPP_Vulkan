@@ -8,7 +8,7 @@ namespace utils::graphics::vulkan::core
 		vk_unique_image      { create_image   (manager, create_info.image, extent) },
 		vk_unique_memory     { allocate_memory(manager, create_info.memory_properties) }
 		{
-		manager.getter(this).device().bindImageMemory(vk_unique_image.get(), vk_unique_memory.get(), 0);
+		manager.get_device().bindImageMemory(vk_unique_image.get(), vk_unique_memory.get(), 0);
 		vk_unique_image_view = create_image_view(manager, create_info.view);
 		}
 
@@ -34,7 +34,7 @@ namespace utils::graphics::vulkan::core
 
 	vk::UniqueImage image::create_image(const manager& manager, const create_info::image_t& create_info, const vk::Extent3D& extent) const
 		{
-		return manager.getter(this).device().createImageUnique(
+		return manager.get_device().createImageUnique(
 			vk::ImageCreateInfo
 			{
 				.flags{ create_info.flags },
@@ -55,7 +55,7 @@ namespace utils::graphics::vulkan::core
 
 	vk::UniqueDeviceMemory image::allocate_memory(const manager& manager, const vk::MemoryPropertyFlags required_properties) const
 		{
-		auto& device{ manager.getter(this).device() };
+		auto& device{ manager.get_device() };
 		vk::UniqueDeviceMemory ret;
 
 		vk::MemoryRequirements mem_requirements;
@@ -64,7 +64,7 @@ namespace utils::graphics::vulkan::core
 		vk::MemoryAllocateInfo allocate_info
 			{
 			.allocationSize { mem_requirements.size },
-			.memoryTypeIndex{ details::find_memory_type(manager.getter(this).physical_device(), mem_requirements.memoryTypeBits, required_properties)},
+			.memoryTypeIndex{ details::find_memory_type(manager.get_physical_device(), mem_requirements.memoryTypeBits, required_properties)},
 			};
 
 		return device.allocateMemoryUnique(allocate_info, nullptr);
@@ -72,7 +72,7 @@ namespace utils::graphics::vulkan::core
 
 	vk::UniqueImageView image::create_image_view(const manager& manager, const create_info::view_t& create_view_info) const
 		{
-		return manager.getter(this).device().createImageViewUnique(
+		return manager.get_device().createImageViewUnique(
 			{
 			.image            { vk_unique_image.get()      },
 			.viewType         { create_view_info.view_type },

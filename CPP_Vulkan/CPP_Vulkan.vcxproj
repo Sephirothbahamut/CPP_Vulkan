@@ -158,7 +158,7 @@
     <ClCompile Include="vulkan\core\renderer_window_data.cpp" />
     <ClCompile Include="vulkan\core\swapchain_chosen_details.cpp" />
     <ClCompile Include="vulkan\libraries_implementation.cpp" />
-    <ClCompile Include="vulkan\renderer\rectangle\rectangle_renderer.cpp" />
+    <ClCompile Include="vulkan\renderer\rectangle\rectangle_renderpass.cpp" />
     <ClCompile Include="vulkan\window\swapchain.cpp" />
     <ClCompile Include="vulkan\window\surface.cpp" />
     <ClCompile Include="vulkan\window\window.cpp" />
@@ -190,7 +190,7 @@
     <ClInclude Include="vulkan\core\swapchain_chosen_details.h" />
     <ClInclude Include="vulkan\core\utils.h" />
     <ClInclude Include="vulkan\dependencies.h" />
-    <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderer.h" />
+    <ClInclude Include="vulkan\renderer\rectangle\rectangle_renderpass.h" />
     <ClInclude Include="vulkan\resources\gpu_resources_manager.h" />
     <ClInclude Include="vulkan\resources\mesh\base.h" />
     <ClInclude Include="vulkan\resources\mesh\gpu.h" />
