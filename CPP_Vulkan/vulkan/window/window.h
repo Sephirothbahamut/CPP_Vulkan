@@ -12,11 +12,13 @@
 #include "surface.h"
 #include "swapchain.h"
 
+namespace utils::graphics::vulkan::core { class renderer; }
 
 namespace utils::graphics::vulkan::window
 	{
 	class window : public virtual utils::win32::window::base
 		{
+		friend class core::renderer;
 		public:
 
 			window(core::manager& manager);

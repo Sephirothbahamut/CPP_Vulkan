@@ -22,7 +22,10 @@ namespace utils::graphics::vulkan::core
 
 		public:
 			//TODO deal with tmp
-			renderer(core::manager& manager, window::window& window, utils::graphics::vulkan::renderer::rectangle_renderpass& tmp) : manager_ptr{&manager}, window_ptr{&window}, tmp_ptr{&tmp}, framebuffers { create_framebuffers() } {}
+			renderer(core::manager& manager, window::window& window, utils::graphics::vulkan::renderer::rectangle_renderpass& tmp) : manager_ptr{&manager}, window_ptr{&window}, tmp_ptr{&tmp}, framebuffers{create_framebuffers()} 
+				{
+				window.renderer_ptr = this;
+				}
 
 			[[nodiscard]] frame begin_frame(float delta_time);
 
