@@ -15,14 +15,12 @@
 
 namespace utils::graphics::vulkan::resources::mesh
 	{
-	template <size_t size, typename floating_type>
-		requires (size == 2 || size == 3) && std::is_floating_point_v<floating_type>
+	template <size_t size, std::floating_point floating_type>
+		requires (size == 2 || size == 3)
 	class base
 		{
 		using vertex_t = vertex<size, floating_type>;
 		public:
-			base           (base&& move) noexcept = default;
-			base& operator=(base&& move) noexcept = default;
 
 			inline static base from_file_obj(const std::filesystem::path& path)
 				{
@@ -99,16 +97,11 @@ namespace utils::graphics::vulkan::resources::mesh
 				return {std::move(vertices), std::move(indices)};
 				}
 
-
 			std::vector<vertex_t> vertices;
 			std::vector<uint32_t> indices;
 
-			base clone() { return {*this}; }
-
 		private:
 			base(std::vector<vertex_t>&& vertices, std::vector<uint32_t>&& indices) : vertices{std::move(vertices)}, indices{std::move(indices)} {}
-			base(const base& copy) = default;
-			base& operator=(const base& copy) = default;
 		};
 	
 	}

@@ -8,8 +8,8 @@
 
 namespace utils::graphics::vulkan::resources
 	{
-	template <size_t size, typename floating_type>
-		requires (size == 2 || size == 3) && std::is_floating_point_v<floating_type>
+	template <size_t size, std::floating_point floating_type>
+		requires (size == 2 || size == 3)
 	struct vertex
 		{
 		using position_t            = utils::math::vec            <floating_type, size>;

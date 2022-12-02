@@ -6,8 +6,8 @@
 
 namespace utils::graphics::vulkan::resources::mesh
 	{
-	template <size_t size, typename floating_type>
-		requires (size == 2 || size == 3) && std::is_floating_point_v<floating_type>
+	template <size_t size, std::floating_point floating_type>
+		requires (size == 2 || size == 3)
 	class gpu
 		{
 		using vertex_t = vertex<size, floating_type>;
