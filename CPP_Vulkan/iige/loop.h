@@ -45,14 +45,15 @@ namespace iige
 				void run()
 					{
 					// https://dewitters.com/dewitters-gameloop/
+					utils::clock<std::chrono::high_resolution_clock, float> fps_clock;
 					           clock.restart();
-					       fps_clock.restart();
 					delta_time_clock.restart();
 
 					next_step_time = clock.get_elapsed();
-					step_loops     = 0  ;
 					interpolation  = 0.f;
-					frames_counter = 0  ;
+
+					size_t   step_loops    {0};
+					uint32_t frames_counter{0};
 
 					while (true)
 						{
@@ -81,15 +82,12 @@ namespace iige
 				float update_delta_time   () { return delta_time_clock.get_elapsed().count(); }
 
 			private:
-				std::chrono::duration<float> step_delta_time;
-				std::chrono::duration<float> next_step_time;
+				std::chrono::duration<float> step_delta_time{};
+				std::chrono::duration<float> next_step_time {};
 
-				size_t   step_loops    {0  };
-				float    interpolation {0.f};
-				uint32_t frames_counter{0  };
+				float interpolation {0.f};
 
 				utils::clock<std::chrono::high_resolution_clock, float>            clock;
-				utils::clock<std::chrono::high_resolution_clock, float>        fps_clock;
 				utils::clock<std::chrono::high_resolution_clock, float> delta_time_clock;
 			};
 		static_assert(concepts::game_loop<fixed_game_speed_variable_framerate>);

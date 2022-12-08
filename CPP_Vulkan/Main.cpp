@@ -136,7 +136,7 @@ int main()
 				}
 			};
 
-		window.resize_redraw_callback = [&window, &loop]() { draw_callback(loop.update_delta_time(), loop.update_interpolation()); };
+		window.resize_redraw_callback = [&window, &loop, &draw_callback]() { draw_callback(loop.update_delta_time(), loop.update_interpolation()); };
 
 		loop.step = [&window](float delta_time) -> bool
 			{
