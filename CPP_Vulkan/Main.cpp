@@ -100,9 +100,7 @@ void test_asset_managers()
 
 int main()
 	{
-	//test_asset_managers();
 	namespace ugv = utils::graphics::vulkan;
-	//test_resource_managers();
 	
 	try
 		{
@@ -121,27 +119,33 @@ int main()
 
 		ugv::renderer::rectangle_renderpass tmp_renderpass{manager};
 
-		ugv::core::renderer renderer{manager, window, tmp_renderpass};
+		ugv::core::renderer renderer {manager, window , tmp_renderpass};
 
 		auto closer{ manager.get_closer() };
 	
 		iige::loop::variable_fps_and_game_speed loop;
-		loop.step = [&window](float delta_time) -> bool
+
+
+		auto draw_callback = [&manager, &window, &renderer, &tmp_renderpass](float delta_time, float interpolation) -> void
 			{
-			while (window.poll_event()) {}
-			return window.is_open();
-			};
-		loop.draw = [&manager, &window, &renderer, &tmp_renderpass](float delta_time, float interpolation) -> void
-			{
-			if (window.width & window.height)
+			if (window.width && window.height)
 				{
 				auto frame{renderer.begin_frame(delta_time)};
 
 				frame.tmp_record_commands(delta_time);
 				}
 			};
+
+		window.resize_redraw_callback = [&window, &loop]() { draw_callback(loop.update_delta_time(), loop.update_interpolation()); };
+
+		loop.step = [&window](float delta_time) -> bool
+			{
+			while (window.poll_event()) {}
+			return window.is_open();
+			};
+		loop.draw = draw_callback;
+
 		loop.run();
-		
 		}
 	catch (const std::exception& e)
 		{

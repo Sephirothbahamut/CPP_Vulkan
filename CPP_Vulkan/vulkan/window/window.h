@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <utils_win32/window.h>
 #include <utils/memory.h>
 #include <utils/containers/handled_container.h>
@@ -30,6 +32,8 @@ namespace utils::graphics::vulkan::window
 			const swapchain& get_swapchain() const noexcept;
 
 			__declspec(property(get = get_extent)) vk::Extent3D extent;
+
+			std::function<void()> resize_redraw_callback;
 
 		private:
 			utils::observer_ptr<core::manager> manager_ptr;

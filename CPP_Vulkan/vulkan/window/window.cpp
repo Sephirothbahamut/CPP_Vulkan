@@ -39,7 +39,8 @@ namespace utils::graphics::vulkan::window
 					if (renderer_ptr)
 						{
 						renderer_ptr->resize();
-						//TODO draw step from loop
+						
+						if (resize_redraw_callback) { resize_redraw_callback(); }
 						}
 					}
 				break;
