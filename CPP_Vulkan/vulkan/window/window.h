@@ -2,9 +2,9 @@
 
 #include <functional>
 
-#include <utils_win32/window.h>
 #include <utils/memory.h>
 #include <utils/containers/handled_container.h>
+#include <utils/win32/window/window.h>
 
 #include "../dependencies.h"
 
@@ -22,7 +22,6 @@ namespace utils::graphics::vulkan::window
 		{
 		friend class core::renderer;
 		public:
-
 			window(core::manager& manager);
 
 			std::optional<LRESULT> procedure(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -34,6 +33,8 @@ namespace utils::graphics::vulkan::window
 			__declspec(property(get = get_extent)) vk::Extent3D extent;
 
 			std::function<void()> resize_redraw_callback;
+
+			void recreate_swapchain() noexcept;
 
 		private:
 			utils::observer_ptr<core::manager> manager_ptr;

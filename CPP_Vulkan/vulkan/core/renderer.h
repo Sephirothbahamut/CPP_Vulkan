@@ -53,16 +53,18 @@ namespace utils::graphics::vulkan::core
 					for (const auto& ws_image : window_sized_images) { attachments.push_back(ws_image.view()); }
 					attachments.insert(attachments.end(), renderer_image_views.begin(), renderer_image_views.end());
 
+					auto client_size{window_ptr->client_rect.size};
+
 					return
 						{manager_ptr->get_device().createFramebufferUnique(
 							vk::FramebufferCreateInfo
 							{
-								.renderPass      { tmp_ptr->get_renderpass() },
-								.attachmentCount { static_cast<uint32_t>(attachments.size()) },
-								.pAttachments    { attachments.data() },
-								.width           { window_ptr->width },
-								.height          { window_ptr->height },
-								.layers          { 1 },
+								.renderPass     {tmp_ptr->get_renderpass()},
+								.attachmentCount{static_cast<uint32_t>(attachments.size())},
+								.pAttachments   {attachments.data()},
+								.width          {static_cast<uint32_t>(client_size.x)},
+								.height         {static_cast<uint32_t>(client_size.y)},
+								.layers         {1},
 							}
 						)};
 					}

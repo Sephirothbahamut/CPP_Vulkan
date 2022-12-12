@@ -1,5 +1,9 @@
 #include <chrono>
 
+#include <utils/win32/window/window.h>
+#include <utils/win32/window/regions.h>
+#include <utils/win32/window/style.h>
+
 #include <glad.h>
 
 #include "opengl/window.h"
@@ -8,30 +12,51 @@
 
 #include "iige/loop.h"
 
-#include <utils_win32/transparent.h>
-class opengl_window : public utils::win32::window::t<utils::graphics::opengl::window::window>//, utils::win32::window::transparent<utils::win32::window::transparency_t::composition_attribute>
+struct window_ogl : 
+	public utils::win32::window::t
+		<
+		utils::win32::window::style,
+		utils::win32::window::resizable_edge,
+		utils::win32::window::regions,
+		utils::graphics::opengl::window::window
+		>, 
+	utils::devirtualize
 	{
-	utils_devirtualize
-	public:
-		//using t<window_implementation_ts...>::t;
-		opengl_window(base::create_info c_info) :
-			base{ c_info } {}
+	struct create_info
+		{
+		utils::win32::window::base          ::create_info base          ;
+		utils::win32::window::style         ::create_info style         ;
+		utils::win32::window::resizable_edge::create_info resizable_edge;
+		utils::win32::window::regions       ::create_info regions       ;
+		};
+
+	window_ogl(create_info create_info) :
+		utils::win32::window::base          {create_info.base          },
+		utils::win32::window::style         {create_info.style         },
+		utils::win32::window::resizable_edge{create_info.resizable_edge},
+		utils::win32::window::regions       {create_info.regions       }
+		{}
 	};
 
 int mainz()
 	{
 	try
 		{
-
-		opengl_window::initializer i;
-		opengl_window window
+		window_ogl::initializer i;
+		window_ogl window{window_ogl::create_info
 			{
-			opengl_window::create_info
+			.base
 				{
 				.title{L"Sample Window Class"},
 				.size{800, 600}
+				},
+			.style
+				{
+				.transparency{utils::win32::window::style::transparency_t::composition_attribute},
+				.borders{utils::win32::window::style::value_t::enable},
+				.shadow {utils::win32::window::style::value_t::enable}
 				}
-			};
+			}};
 
 		if (!gladLoadGL())
 			{
@@ -51,7 +76,7 @@ int mainz()
 		loop.draw = [&window, &rectangle_renderer](float delta_time, float interpolation) -> void
 			{
 			glClear(GL_COLOR_BUFFER_BIT);
-			if (window.width & window.height)
+			if (window.client_rect.width & window.client_rect.height)
 				{
 				rectangle_renderer.draw();
 				}

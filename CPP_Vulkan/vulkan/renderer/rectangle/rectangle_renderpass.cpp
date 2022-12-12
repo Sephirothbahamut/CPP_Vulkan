@@ -315,7 +315,7 @@ namespace utils::graphics::vulkan::renderer
 			{
 			vk::ClearValue clear_color{std::array<float, 4>{0.0f, 0.0f, 0.2f, 0.0f}};
 
-
+			utils::math::vec2u32 client_size{window.client_rect.size};
 			vk::RenderPassBeginInfo renderpass_info
 				{
 				.renderPass  {vk_unique_renderpass.get()},
@@ -323,7 +323,7 @@ namespace utils::graphics::vulkan::renderer
 				.renderArea
 					{
 					.offset {0, 0},
-					.extent {vk::Extent2D{window.width, window.height}},
+					.extent {vk::Extent2D{client_size.x, client_size.y}},
 					},
 				.clearValueCount {1},
 				.pClearValues {&clear_color},
@@ -334,8 +334,8 @@ namespace utils::graphics::vulkan::renderer
 
 			command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, vk_unique_pipeline.get());
 
-			command_buffer.setViewport(0, vk::Viewport{.x{0}, .y{0}, .width{static_cast<float>(window.width)}, .height{static_cast<float>(window.height)}, .minDepth{0.f}, .maxDepth{1.f}});
-			command_buffer.setScissor(0, vk::Rect2D{.offset{0, 0}, .extent{window.width, window.height}});
+			command_buffer.setViewport(0, vk::Viewport{.x{0}, .y{0}, .width{static_cast<float>(client_size.x)}, .height{static_cast<float>(client_size.y)}, .minDepth{0.f}, .maxDepth{1.f}});
+			command_buffer.setScissor(0, vk::Rect2D{.offset{0, 0}, .extent{client_size.x, client_size.y}});
 
 			vk::Buffer vertex_buffers[] = {vk_unique_vertex_buffer.get()};
 			vk::DeviceSize offsets[] = {0};

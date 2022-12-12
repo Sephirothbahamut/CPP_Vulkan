@@ -34,7 +34,9 @@ namespace utils::graphics::vulkan::core
 		auto severity = vk::DebugUtilsMessageSeverityFlagBitsEXT(messageSeverity);
 		switch (severity)
 			{
-			case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:   logger.err(pCallbackData->pMessage); break;//throw error{pCallbackData->pMessage}; break;
+			case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:   
+				logger.err(pCallbackData->pMessage);
+				throw error{pCallbackData->pMessage}; break;
 			case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning: logger.wrn(pCallbackData->pMessage); break;
 			case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo:    logger.inf(pCallbackData->pMessage); break;
 			case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose: logger.log(pCallbackData->pMessage); break;

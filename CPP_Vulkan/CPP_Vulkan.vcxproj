@@ -147,6 +147,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainOGL.cpp" />
     <ClCompile Include="quick_tests.cpp" />
+    <ClCompile Include="resman_tests.cpp" />
     <ClCompile Include="vulkan\core\flying_frames_pool.cpp" />
     <ClCompile Include="vulkan\core\debug_messenger.cpp" />
     <ClCompile Include="vulkan\core\image.cpp" />

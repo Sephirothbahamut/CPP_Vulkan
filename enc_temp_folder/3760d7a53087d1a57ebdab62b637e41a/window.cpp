@@ -32,8 +32,8 @@ namespace utils::graphics::vulkan::window
 				{
 				const auto rect{client_rect};
 				utils::graphics::vulkan::core::logger.log("recreate swapchain\n");
-				utils::graphics::vulkan::core::logger.log("Window: "s + std::to_string(window_rect.width) + ", "s + std::to_string(window_rect.height));
-				utils::graphics::vulkan::core::logger.log("Client: "s + std::to_string(client_rect.width) + ", "s + std::to_string(client_rect.height));
+				utils::graphics::vulkan::core::logger.log("Window: "s + std::to_string(window_rect.width) + ", "s + std::to_string(window_rect.height) + "\n"s);
+				utils::graphics::vulkan::core::logger.log("Client: "s + std::to_string(client_rect.width) + ", "s + std::to_string(client_rect.height) + "\n"s);
 
 				if (client_rect.width && client_rect.height)
 					{
